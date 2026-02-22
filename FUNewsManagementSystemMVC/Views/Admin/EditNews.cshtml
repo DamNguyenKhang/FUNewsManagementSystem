@@ -1,0 +1,569 @@
+@model FUNewsManagementSystemMVC.Models.UpdateNewsArticleViewModel
+@{
+    ViewData["Title"] = "Edit News Article";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var categories = ViewBag.Categories as IEnumerable<BusinessObject.Entities.Category>;
+    var tags = ViewBag.Tags as IEnumerable<BusinessObject.Entities.Tag>;
+}
+
+<style>
+    #editor:empty:before {
+        content: attr(placeholder);
+        color: #9ca3af;
+        cursor: text;
+    }
+    #editor a {
+        color: #f37120;
+        text-decoration: underline;
+    }
+</style>
+
+<!-- Synchronized Header -->
+<header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0 z-10 sticky top-0">
+    <div class="flex items-center gap-2 text-sm">
+        <span class="text-text-secondary">Admin</span>
+        <span class="text-gray-300">/</span>
+        <span class="text-text-secondary">News Reports</span>
+        <span class="text-gray-300">/</span>
+        <span class="font-medium text-gray-900">Edit Article</span>
+    </div>
+    <div class="flex items-center gap-4">
+        <span class="material-symbols-outlined text-gray-400">notifications</span>
+    </div>
+</header>
+
+<div class="p-6 md:p-8">
+    <main class="w-full max-w-[1440px] mx-auto">
+        <!-- Page Title -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <div>
+                <h1 class="text-3xl md:text-4xl font-bold text-text-main tracking-tight font-display">Edit News Article</h1>
+                <p class="text-text-secondary mt-1">Update article content as Administrator.</p>
+            </div>
+            <a asp-action="Reports" class="flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+                Back to Reports
+            </a>
+        </div>
+
+        <form asp-action="EditNews" method="post" enctype="multipart/form-data">
+            <input type="hidden" asp-for="NewsArticleId" />
+            <div asp-validation-summary="ModelOnly" class="text-red-500 text-sm mb-4"></div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Left Column: Main Editor -->
+                <div class="lg:col-span-8 flex flex-col gap-6">
+                    <!-- Title Input -->
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                        <label asp-for="NewsTitle" class="block text-sm font-semibold text-text-main mb-2">Article Headline</label>
+                        <input asp-for="NewsTitle" class="w-full text-xl md:text-2xl font-bold text-text-main bg-transparent border-0 border-b-2 border-gray-100 focus:border-primary focus:ring-0 px-0 py-2 placeholder-gray-300 transition-colors" placeholder="Enter a catchy headline for your news article..." />
+                        <span asp-validation-for="NewsTitle" class="text-red-500 text-xs mt-1"></span>
+                    </div>
+
+                    <!-- Rich Text Editor -->
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-[500px]">
+                        <!-- Toolbar -->
+                        <div class="flex flex-wrap items-center gap-1 p-3 border-b border-gray-100 bg-gray-50/50">
+                            <div class="flex items-center border-r border-gray-200 pr-2 mr-1">
+                                <select onchange="formatDoc('formatBlock', this.value); this.selectedIndex=0;" class="text-sm bg-transparent border-none focus:ring-0 font-medium text-text-main cursor-pointer hover:bg-black/5 rounded px-2 py-1">
+                                    <option value="" selected disabled>Format</option>
+                                    <option value="p">Paragraph</option>
+                                    <option value="h1">Heading 1</option>
+                                    <option value="h2">Heading 2</option>
+                                    <option value="h3">Heading 3</option>
+                                </select>
+                            </div>
+                            <button id="btn-bold" type="button" onclick="formatDoc('bold')" class="p-1.5 text-text-secondary hover:text-primary hover:bg-primary/10 rounded transition-colors" title="Bold">
+                                <span class="material-symbols-outlined text-[20px]">format_bold</span>
+                            </button>
+                            <button id="btn-italic" type="button" onclick="formatDoc('italic')" class="p-1.5 text-text-secondary hover:text-primary hover:bg-primary/10 rounded transition-colors" title="Italic">
+                                <span class="material-symbols-outlined text-[20px]">format_italic</span>
+                            </button>
+                            <button id="btn-underline" type="button" onclick="formatDoc('underline')" class="p-1.5 text-text-secondary hover:text-primary hover:bg-primary/10 rounded transition-colors" title="Underline">
+                                <span class="material-symbols-outlined text-[20px]">format_underlined</span>
+                            </button>
+                            <div class="w-px h-5 bg-gray-200 mx-1"></div>
+                            <button type="button" onclick="createLink()" class="p-1.5 text-text-secondary hover:text-primary hover:bg-primary/10 rounded transition-colors" title="Link">
+                                <span class="material-symbols-outlined text-[20px]">link</span>
+                            </button>
+                            <button type="button" onclick="const url = prompt('Enter the image URL'); if(url) formatDoc('insertImage', url)" class="p-1.5 text-text-secondary hover:text-primary hover:bg-primary/10 rounded transition-colors" title="Image">
+                                <span class="material-symbols-outlined text-[20px]">image</span>
+                            </button>
+                            <button type="button" onclick="formatDoc('formatBlock', 'blockquote')" class="p-1.5 text-text-secondary hover:text-primary hover:bg-primary/10 rounded transition-colors" title="Quote">
+                                <span class="material-symbols-outlined text-[20px]">format_quote</span>
+                            </button>
+                        </div>
+                        <!-- Editable Area -->
+                        <div id="editor" contenteditable="true" class="flex-1 w-full p-6 bg-transparent border-none focus:ring-0 text-base leading-relaxed text-text-main min-h-[400px] outline-none prose-sm sm:prose max-w-none" placeholder="Start writing your article content here..."></div>
+                        <textarea asp-for="NewsContent" id="NewsContentHidden" style="display:none;"></textarea>
+                        <span asp-validation-for="NewsContent" class="text-red-500 text-xs px-6 pb-2"></span>
+                    </div>
+
+                    <!-- Featured Image -->
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                        <label class="block text-sm font-semibold text-text-main mb-4">Featured Image</label>
+                        
+                        <div class="relative group">
+                            <!-- Upload Box / Preview Area -->
+                            <div id="imageContainer" class="border-2 border-dashed border-gray-200 rounded-xl overflow-hidden min-h-[250px] flex items-center justify-center bg-gray-50/50 transition-all">
+                                <!-- Empty State -->
+                                <div id="emptyState" onclick="document.getElementById('fileInput').click()" class="flex flex-col items-center justify-center p-8 text-center cursor-pointer hover:bg-primary/5 transition-colors w-full h-full @(string.IsNullOrEmpty(Model.NewsArticleImage) ? "" : "hidden")">
+                                    <div class="w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                        <span class="material-symbols-outlined text-3xl text-primary">cloud_upload</span>
+                                    </div>
+                                    <p class="text-text-main font-bold">Click to upload or drag and drop</p>
+                                    <p class="text-sm text-text-secondary mt-1">SVG, PNG, JPG or GIF (max. 800x400px)</p>
+                                </div>
+
+                                <!-- Preview State -->
+                                <div id="previewState" class="relative w-full h-full min-h-[250px] @(string.IsNullOrEmpty(Model.NewsArticleImage) ? "hidden" : "")">
+                                    <img id="imagePreview" src="@Model.NewsArticleImage" alt="Preview" class="w-full h-full object-cover" />
+                                    <!-- Remove Button -->
+                                    <button type="button" onclick="clearImage()" class="absolute top-4 right-4 h-10 w-10 bg-white/90 backdrop-blur rounded-full shadow-lg flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all z-10">
+                                        <span class="material-symbols-outlined filled">close</span>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Hidden File Input -->
+                            <input type="file" id="fileInput" name="ImageFile" accept="image/*" class="hidden" onchange="handleFileSelect(this)" />
+                        </div>
+
+                        <div class="mt-6 flex flex-col gap-2">
+                             <div class="flex items-center gap-2">
+                                <span class="h-px bg-gray-200 flex-1"></span>
+                                <span class="text-[10px] font-bold text-text-secondary uppercase tracking-widest">Or use Image URL</span>
+                                <span class="h-px bg-gray-200 flex-1"></span>
+                             </div>
+                             <div class="flex gap-2">
+                                <span class="material-symbols-outlined text-gray-400 mt-2.5">link</span>
+                                <input asp-for="NewsArticleImage" id="imageUrlInput" class="flex-1 rounded-lg border-gray-200 bg-gray-50 text-sm focus:border-primary focus:ring-primary py-2.5" placeholder="https://example.com/image.jpg" />
+                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Sidebar -->
+                <div class="lg:col-span-4 space-y-6">
+                    <div class="sticky top-24 space-y-6">
+                        <!-- Publish Settings Card -->
+                        <div class="bg-white rounded-xl border border-gray-200 shadow-md overflow-hidden">
+                            <div class="bg-gray-50 px-5 py-3 border-b border-gray-100 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary text-xl">settings</span>
+                                <h3 class="font-semibold text-text-main">Publish Settings</h3>
+                            </div>
+                            <div class="p-5 space-y-6">
+                                <!-- Headline Short Input -->
+                                <div>
+                                    <label asp-for="Headline" class="block text-sm font-medium text-text-main mb-2">Short Headline</label>
+                                    <input asp-for="Headline" class="w-full rounded-lg border-gray-200 bg-gray-50 text-sm focus:border-primary focus:ring-primary py-2.5" placeholder="Summary for grid view..." />
+                                    <span asp-validation-for="Headline" class="text-red-500 text-xs mt-1"></span>
+                                </div>
+
+                                <!-- Category -->
+                                <div>
+                                    <label asp-for="CategoryId" class="block text-sm font-medium text-text-main mb-2">Category</label>
+                                    <select asp-for="CategoryId" class="w-full rounded-lg border-gray-200 bg-gray-50 text-text-main focus:border-primary focus:ring-primary text-sm py-2.5">
+                                        <option value="">Select a category</option>
+                                        @if (categories != null)
+                                        {
+                                            foreach (var cat in categories)
+                                            {
+                                                <option value="@cat.Id">@cat.CategoryName</option>
+                                            }
+                                        }
+                                    </select>
+                                    <span asp-validation-for="CategoryId" class="text-red-500 text-xs mt-1"></span>
+                                </div>
+
+                                <!-- Tags Selection -->
+                                <div>
+                                    <label class="block text-sm font-medium text-text-main mb-2">Tags</label>
+                                    <div class="p-2 bg-gray-50 border border-gray-200 rounded-lg focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
+                                        <div id="selectedTagsContainer" class="flex flex-wrap gap-2 mb-2">
+                                            <!-- Selected tags chips will go here -->
+                                        </div>
+                                        <input id="tagInput" class="w-full bg-transparent border-none p-0 text-sm focus:ring-0 placeholder-text-secondary" placeholder="Select tags below..." readonly type="text"/>
+                                        <!-- Hidden inputs for form submission -->
+                                        <div id="hiddenTagsInputs">
+                                            @if (Model.TagIds != null)
+                                            {
+                                                foreach (var tagId in Model.TagIds)
+                                                {
+                                                    <input type="hidden" name="TagIds" value="@tagId" data-tag-id="@tagId" />
+                                                }
+                                            }
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-4">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <label class="block text-xs font-semibold text-text-secondary uppercase">Available Tags (Click to add)</label>
+                                            <div class="flex items-center gap-2">
+                                                <button type="button" onclick="openTagModal()" class="p-1 hover:bg-primary/10 rounded-full text-primary transition-colors cursor-pointer" title="Add new tag">
+                                                    <span class="material-symbols-outlined text-[18px]">add_circle</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div id="availableTagsContainer" class="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-1">
+                                            @if (tags != null)
+                                            {
+                                                foreach (var tag in tags)
+                                                {
+                                                    bool isSelected = Model.TagIds?.Contains(tag.Id) ?? false;
+                                                    <button type="button" data-tag-id="@tag.Id" data-tag-name="@tag.TagName" 
+                                                            class="tag-option inline-flex items-center px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer @(isSelected ? "opacity-50 pointer-events-none bg-primary/10 text-primary" : "bg-gray-100 text-gray-600 hover:bg-primary/10 hover:text-primary")">
+                                                        @tag.TagName
+                                                    </button>
+                                                }
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Visibility -->
+                                <div>
+                                    <label class="block text-sm font-medium text-text-main mb-3">Visibility</label>
+                                    <div class="space-y-3">
+                                        <label class="flex items-center group cursor-pointer">
+                                            <input type="radio" asp-for="NewsStatus" value="false" class="w-4 h-4 text-primary border-gray-300 focus:ring-primary" />
+                                            <div class="ml-3 flex items-center gap-2">
+                                                <span class="material-symbols-outlined text-gray-400 text-sm group-hover:text-primary transition-colors">edit_document</span>
+                                                <span class="text-sm text-text-main">Draft</span>
+                                            </div>
+                                        </label>
+                                        <label class="flex items-center group cursor-pointer">
+                                            <input type="radio" asp-for="NewsStatus" value="true" class="w-4 h-4 text-primary border-gray-300 focus:ring-primary" />
+                                            <div class="ml-3 flex items-center gap-2">
+                                                <span class="material-symbols-outlined text-green-500 text-sm">public</span>
+                                                <span class="text-sm text-text-main">Public</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Actions Footer -->
+                            <div class="bg-gray-50 p-5 border-t border-gray-100 flex flex-col gap-3">
+                                <button type="submit" class="w-full bg-primary hover:bg-primary-dark text-white font-bold py-2.5 px-4 rounded-lg shadow-md shadow-primary/20 transition-all flex items-center justify-center gap-2">
+                                    <span class="material-symbols-outlined text-[20px]">save</span>
+                                    Update Article
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex items-center gap-4">
+                            <div class="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                                @(Context.Session.GetString("AccountName")?[0].ToString().ToUpper() ?? "A")
+                            </div>
+                            <div class="flex-1 overflow-hidden">
+                                <p class="text-xs text-text-secondary uppercase font-semibold">Administrator</p>
+                                <p class="text-sm font-bold text-text-main truncate">@Context.Session.GetString("AccountName")</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </main>
+</div>
+
+<!-- Add Tag Modal -->
+<div id="tagModal" class="hidden fixed inset-0 z-[100] overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <!-- Backdrop -->
+        <div class="fixed inset-0 bg-black/50 transition-opacity" onclick="closeTagModal()"></div>
+        
+        <!-- Modal Content -->
+        <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+            <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <h3 class="font-bold text-text-main flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">sell</span>
+                    Create New Tag
+                </h3>
+                <button type="button" onclick="closeTagModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label for="newTagName" class="block text-sm font-semibold text-text-main mb-1">Tag Name <span class="text-red-500">*</span></label>
+                    <input type="text" id="newTagName" class="w-full rounded-lg border-gray-200 bg-gray-50 focus:border-primary focus:ring-primary text-sm py-2.5" placeholder="e.g. Technology" />
+                </div>
+                <div>
+                    <label for="newTagNote" class="block text-sm font-semibold text-text-main mb-1">Note (Optional)</label>
+                    <textarea id="newTagNote" rows="3" class="w-full rounded-lg border-gray-200 bg-gray-50 focus:border-primary focus:ring-primary text-sm py-2.5" placeholder="Describe this tag..."></textarea>
+                </div>
+                <div id="tagModalError" class="hidden p-3 bg-red-50 border border-red-100 text-red-600 text-xs rounded-lg"></div>
+            </div>
+            <div class="bg-gray-50 px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
+                <button type="button" onclick="closeTagModal()" class="px-4 py-2 text-sm font-medium text-text-secondary hover:bg-gray-100 rounded-lg transition-colors">Cancel</button>
+                <button type="button" id="saveTagBtn" class="px-4 py-2 text-sm font-bold text-white bg-primary hover:bg-primary-dark rounded-lg shadow-md shadow-primary/20 transition-all">Create Tag</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // RTF Editor Logic
+        const editor = document.getElementById('editor');
+        const hiddenInput = document.getElementById('NewsContentHidden');
+
+        function formatDoc(cmd, value = null) {
+            if (value) {
+                document.execCommand(cmd, false, value);
+            } else {
+                document.execCommand(cmd, false, null);
+            }
+            editor.focus();
+            hiddenInput.value = editor.innerHTML;
+            updateToolbar();
+        }
+
+        function updateToolbar() {
+            const commands = ['bold', 'italic', 'underline'];
+            commands.forEach(cmd => {
+                const btn = document.getElementById(`btn-${cmd}`);
+                if (btn) {
+                    if (document.queryCommandState(cmd)) {
+                        btn.classList.add('bg-primary/20', 'text-primary');
+                        btn.classList.remove('text-text-secondary');
+                    } else {
+                        btn.classList.remove('bg-primary/20', 'text-primary');
+                        btn.classList.add('text-text-secondary');
+                    }
+                }
+            });
+        }
+
+        editor.addEventListener('mouseup', updateToolbar);
+        editor.addEventListener('keyup', updateToolbar);
+        editor.addEventListener('input', () => {
+            hiddenInput.value = editor.innerHTML;
+            updateToolbar();
+        });
+
+        window.createLink = function() {
+            const url = prompt('Enter the link URL:');
+            if (!url) return;
+
+            const selection = window.getSelection();
+            if (selection.toString().length === 0) {
+                const text = prompt('Enter the text to display:');
+                if (text) {
+                    const link = `<a href="${url}" target="_blank">${text}</a>`;
+                    document.execCommand('insertHTML', false, link);
+                }
+            } else {
+                document.execCommand('createLink', false, url);
+                const selectedElement = selection.anchorNode.parentElement;
+                if (selectedElement.tagName === 'A') {
+                    selectedElement.target = '_blank';
+                }
+            }
+            hiddenInput.value = editor.innerHTML;
+        }
+
+        // Initialize editor with existing content
+        if (hiddenInput.value) {
+            editor.innerHTML = hiddenInput.value;
+        }
+
+        // Image Management Logic
+        const urlInput = document.getElementById('imageUrlInput');
+        const fileInput = document.getElementById('fileInput');
+        const emptyState = document.getElementById('emptyState');
+        const previewState = document.getElementById('previewState');
+        const previewImg = document.getElementById('imagePreview');
+        const imageContainer = document.getElementById('imageContainer');
+
+        if (previewImg.src && previewImg.src !== window.location.href && !previewImg.src.endsWith('#')) {
+            imageContainer.classList.remove('border-dashed');
+            imageContainer.classList.add('border-solid', 'border-gray-100');
+        }
+
+        function showPreview(src) {
+            previewImg.src = src;
+            emptyState.classList.add('hidden');
+            previewState.classList.remove('hidden');
+            imageContainer.classList.remove('border-dashed');
+            imageContainer.classList.add('border-solid', 'border-gray-100');
+        }
+
+        function clearImage() {
+            previewImg.src = '#';
+            emptyState.classList.remove('hidden');
+            previewState.classList.add('hidden');
+            imageContainer.classList.add('border-dashed');
+            imageContainer.classList.remove('border-solid', 'border-gray-100');
+            fileInput.value = '';
+            urlInput.value = '';
+        }
+
+        function handleFileSelect(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    showPreview(e.target.result);
+                    urlInput.value = '';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        urlInput.addEventListener('input', function() {
+            if (this.value && (this.value.startsWith('http') || this.value.startsWith('/'))) {
+                showPreview(this.value);
+                fileInput.value = '';
+            } else if (!this.value) {
+                clearImage();
+            }
+        });
+
+        // Tag selection logic
+        const selectedTagsContainer = document.getElementById('selectedTagsContainer');
+        const hiddenInputsContainer = document.getElementById('hiddenTagsInputs');
+        const tagOptions = document.querySelectorAll('.tag-option');
+        const selectedTagIds = new Set();
+
+        function createTagChip(id, name) {
+            const chip = document.createElement('span');
+            chip.className = 'inline-flex items-center px-2 py-1 rounded bg-primary/10 text-primary text-xs font-medium';
+            chip.innerHTML = `${name} <button type="button" onclick="removeTag(${id}, this)" class="ml-1 hover:text-red-500"><span class="material-symbols-outlined text-[14px]">close</span></button>`;
+            return chip;
+        }
+
+        function createHiddenInput(id) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'TagIds';
+            input.value = id;
+            input.setAttribute('data-tag-id', id);
+            return input;
+        }
+
+        window.removeTag = function(id, btn) {
+            selectedTagIds.delete(id);
+            btn.parentElement.remove();
+            const hiddenInput = hiddenInputsContainer.querySelector(`input[data-tag-id="${id}"]`);
+            if (hiddenInput) hiddenInput.remove();
+            
+            const opt = document.querySelector(`.tag-option[data-tag-id="${id}"]`);
+            if (opt) {
+                opt.classList.remove('opacity-50', 'pointer-events-none', 'bg-primary/10', 'text-primary');
+                opt.classList.add('bg-gray-100', 'text-gray-600');
+            }
+        };
+
+        function addTagToSelected(btn, id, name) {
+            if (!selectedTagIds.has(id)) {
+                selectedTagIds.add(id);
+                selectedTagsContainer.appendChild(createTagChip(id, name));
+                if (!hiddenInputsContainer.querySelector(`input[data-tag-id="${id}"]`)) {
+                    hiddenInputsContainer.appendChild(createHiddenInput(id));
+                }
+                
+                if (btn) {
+                    btn.classList.add('opacity-50', 'pointer-events-none', 'bg-primary/10', 'text-primary');
+                    btn.classList.remove('bg-gray-100', 'text-gray-600');
+                }
+            }
+        }
+
+        tagOptions.forEach(opt => {
+            const id = parseInt(opt.getAttribute('data-tag-id'));
+            const name = opt.getAttribute('data-tag-name');
+            
+            // Initial state for existing tags
+            if (opt.classList.contains('opacity-50')) {
+                selectedTagIds.add(id);
+                selectedTagsContainer.appendChild(createTagChip(id, name));
+            }
+
+            opt.addEventListener('click', function() {
+                addTagToSelected(this, id, name);
+            });
+        });
+
+        // Add New Tag logic
+        const tagModal = document.getElementById('tagModal');
+        const newTagNameInput = document.getElementById('newTagName');
+        const newTagNoteInput = document.getElementById('newTagNote');
+        const tagModalError = document.getElementById('tagModalError');
+        const saveTagBtn = document.getElementById('saveTagBtn');
+        const availableTagsContainer = document.getElementById('availableTagsContainer');
+
+        window.openTagModal = function() {
+            tagModal.classList.remove('hidden');
+            tagModalError.classList.add('hidden');
+            newTagNameInput.value = '';
+            newTagNoteInput.value = '';
+            newTagNameInput.focus();
+        };
+
+        window.closeTagModal = function() {
+            tagModal.classList.add('hidden');
+        };
+
+        saveTagBtn.addEventListener('click', async function() {
+            const tagName = newTagNameInput.value.trim();
+            const note = newTagNoteInput.value.trim();
+            
+            if (!tagName) {
+                showModalError('Tag name is required');
+                return;
+            }
+
+            try {
+                saveTagBtn.disabled = true;
+                saveTagBtn.innerText = 'Creating...';
+                
+                const response = await fetch('/Admin/CreateTag', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tagName: tagName, note: note })
+                });
+
+                if (response.ok) {
+                    const newTag = await response.json();
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.setAttribute('data-tag-id', newTag.id);
+                    btn.setAttribute('data-tag-name', newTag.tagName);
+                    btn.className = 'tag-option inline-flex items-center px-2 py-1 rounded bg-gray-100 text-gray-600 text-xs font-medium hover:bg-primary/10 hover:text-primary transition-colors cursor-pointer';
+                    btn.innerText = newTag.tagName;
+                    
+                    btn.addEventListener('click', function() {
+                        addTagToSelected(this, newTag.id, newTag.tagName);
+                    });
+
+                    availableTagsContainer.appendChild(btn);
+                    addTagToSelected(btn, newTag.id, newTag.tagName);
+                    closeTagModal();
+                } else {
+                    const error = await response.text();
+                    showModalError(error);
+                }
+            } catch (err) {
+                console.error('Error creating tag:', err);
+                showModalError('Failed to create tag');
+            } finally {
+                saveTagBtn.disabled = false;
+                saveTagBtn.innerText = 'Create Tag';
+            }
+        });
+
+        function showModalError(msg) {
+            tagModalError.innerText = msg;
+            tagModalError.classList.remove('hidden');
+        }
+
+        newTagNameInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                saveTagBtn.click();
+            }
+        });
+    </script>
+}

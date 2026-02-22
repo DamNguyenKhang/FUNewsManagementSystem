@@ -11,7 +11,7 @@ namespace Repositories
         {
         }
 
-        public async Task<List<NewsArticle>> GetAllAsync(string? keyword = null, short? categoryId = null, bool? newsStatus = null, short? createdById = null, DateTime? startDate = null, DateTime? endDate = null)
+        public async Task<List<NewsArticle>> GetAllAsync(string? keyword = null, short? categoryId = null, bool? newsStatus = null, short? createdById = null, DateTime? startDate = null, DateTime? endDate = null, int? pageIndex = null, int? pageSize = null)
         {
             var query = _context.NewsArticles
                 .Include(x => x.Category)
@@ -19,7 +19,26 @@ namespace Repositories
                 .Include(x => x.CreatedBy)
                 .AsQueryable();
 
-            // Filter theo Date Range
+            if (!string.IsNullOrEmpty(keyword))
+            {
+                query = query.Where(x => x.NewsTitle.Contains(keyword) || x.Headline.Contains(keyword));
+            }
+
+            if (categoryId.HasValue)
+            {
+                query = query.Where(x => x.CategoryId == categoryId.Value);
+            }
+
+            if (newsStatus.HasValue)
+            {
+                query = query.Where(x => x.NewsStatus == newsStatus.Value);
+            }
+
+            if (createdById.HasValue)
+            {
+                query = query.Where(x => x.CreatedById == createdById.Value);
+            }
+
             if (startDate.HasValue)
             {
                 query = query.Where(x => x.CreatedDate >= startDate.Value);
@@ -30,40 +49,51 @@ namespace Repositories
                 query = query.Where(x => x.CreatedDate <= endDate.Value);
             }
 
-            // Filter theo CreatedBy
-            if (createdById.HasValue)
+            query = query.OrderByDescending(x => x.CreatedDate);
+
+            if (pageIndex.HasValue && pageSize.HasValue)
             {
-                query = query.Where(x => x.CreatedById == createdById.Value);
+                query = query.Skip((pageIndex.Value - 1) * pageSize.Value).Take(pageSize.Value);
             }
 
-            // Filter theo Category
+            return await query.ToListAsync();
+        }
+
+        public async Task<int> CountAsync(string? keyword = null, short? categoryId = null, bool? newsStatus = null, short? createdById = null, DateTime? startDate = null, DateTime? endDate = null)
+        {
+            var query = _context.NewsArticles.AsQueryable();
+
+            if (!string.IsNullOrEmpty(keyword))
+            {
+                query = query.Where(x => x.NewsTitle.Contains(keyword) || x.Headline.Contains(keyword));
+            }
+
             if (categoryId.HasValue)
             {
                 query = query.Where(x => x.CategoryId == categoryId.Value);
             }
 
-            // Filter theo Status
             if (newsStatus.HasValue)
             {
                 query = query.Where(x => x.NewsStatus == newsStatus.Value);
             }
 
-            // Search theo keyword
-            if (!string.IsNullOrWhiteSpace(keyword))
+            if (createdById.HasValue)
             {
-                keyword = keyword.Trim();
-
-                query = query.Where(x =>
-                    EF.Functions.Like(x.Headline, $"%{keyword}%") ||
-                    EF.Functions.Like(x.NewsContent, $"%{keyword}%") ||
-                    EF.Functions.Like(x.Category.CategoryName, $"%{keyword}%") ||
-                    x.Tags.Any(t => EF.Functions.Like(t.TagName, $"%{keyword}%"))
-                );
+                query = query.Where(x => x.CreatedById == createdById.Value);
             }
 
-            return await query
-                .OrderByDescending(x => x.CreatedDate)
-                .ToListAsync();
+            if (startDate.HasValue)
+            {
+                query = query.Where(x => x.CreatedDate >= startDate.Value);
+            }
+
+            if (endDate.HasValue)
+            {
+                query = query.Where(x => x.CreatedDate <= endDate.Value);
+            }
+
+            return await query.CountAsync();
         }
 
         public async Task<List<NewsArticle>> GetRelatedNewsAsync(string currentNewsId, List<int> tagIds)

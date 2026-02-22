@@ -12,7 +12,9 @@
             <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 mb-2">Latest Updates</h1>
             <p class="text-text-secondary text-lg max-w-2xl">Discover the latest news, academic achievements, and upcoming events at FPT University.</p>
         </div>
-        <div class="text-sm text-text-secondary font-medium">Showing <span class="text-gray-900 font-bold">1-@Model.Count()</span> of <span class="text-gray-900 font-bold">@Model.Count()</span> articles</div>
+        <div id="articles-count-display" class="text-sm text-text-secondary font-medium">
+            Showing <span class="text-gray-900 font-bold" id="current-count">@Model.Count()</span> articles
+        </div>
     </div>
     <form method="get" asp-action="Index" class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col lg:flex-row gap-4 items-center justify-between">
         <input type="hidden" name="categoryId" value="@ViewBag.CategoryId" />
@@ -44,7 +46,7 @@
 @if (featured != null)
 {
     @* Featured - Clicking goes to detail *@
-    <div class="mb-12 cursor-pointer">
+    <div class="mb-12">
         <a asp-controller="Home" asp-action="Details" asp-route-id="@featured.Id" class="block group relative flex flex-col md:flex-row bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100">
             <div class="md:w-2/3 relative overflow-hidden">
                 <div class="absolute top-4 left-4 z-10"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-primary text-white shadow-sm uppercase tracking-wide">Featured</span></div>
@@ -65,30 +67,111 @@
 }
 
 @* Grid *@
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-    @foreach (var article in otherNews)
-    {
-        <article class="group relative flex flex-col bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden h-full">
-            <a asp-controller="Home" asp-action="Details" asp-route-id="@article.Id" class="absolute inset-0 z-0"></a>
-            <div class="relative overflow-hidden aspect-video">
-                @if (article.Category != null)
-                {
-                    <div class="absolute top-3 left-3 z-10">
-                        <span class="inline-block px-2.5 py-1 rounded bg-white/90 backdrop-blur text-primary text-xs font-bold uppercase tracking-wide shadow-sm">@article.Category.CategoryName</span>
-                    </div>
-                }
-                <div class="w-full h-full bg-gray-200 bg-cover bg-center transform group-hover:scale-110 transition-transform duration-500" 
-                     style="background-image: url('@(string.IsNullOrEmpty(article.NewsArticleImage) ? defaultImage : article.NewsArticleImage)')"></div>
-            </div>
-            <div class="p-5 flex flex-col flex-grow relative z-10 pointer-events-none">
-                <div class="flex items-center gap-2 mb-2 text-xs text-text-secondary">
-                    <span class="flex items-center gap-1">
-                        <span class="material-symbols-outlined text-[14px]">schedule</span> 
-                        @(article.CreatedDate?.ToString("MMM dd, yyyy") ?? "N/A")
-                    </span>
-                </div>
-                <h3 class="text-lg font-bold text-gray-900 mb-2 leading-snug group-hover:text-primary transition-colors">@article.NewsTitle</h3>
-            </div>
-        </article>
-    }
+<div id="news-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+    <partial name="_NewsListPartial" model="otherNews" />
 </div>
+
+@* Sentinel for Infinite Scroll *@
+<div id="loading-sentinel" class="py-12 flex justify-center items-center">
+    <div id="loading-spinner" class="hidden">
+        <div class="flex items-center gap-3 px-6 py-3 bg-white rounded-full shadow-md border border-gray-100">
+            <span class="relative flex h-3 w-3">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+            </span>
+            <span class="text-sm font-bold text-gray-600">Loading more amazing stories...</span>
+        </div>
+    </div>
+    <div id="no-more-msg" class="hidden text-gray-400 text-sm font-medium italic">
+        You've reached the end of our updates. Stay tuned for more!
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let currentPage = 1;
+        let isLoading = false;
+        let hasMore = @(Model.Count() >= 10 ? "true" : "false");
+        const newsGrid = document.getElementById('news-grid');
+        const spinner = document.getElementById('loading-spinner');
+        const noMoreMsg = document.getElementById('no-more-msg');
+        const sentinel = document.getElementById('loading-sentinel');
+        const currentCountDisplay = document.getElementById('current-count');
+
+        const observerOptions = {
+            root: null,
+            rootMargin: '100px',
+            threshold: 0.1
+        };
+
+        const loadMoreArticles = async () => {
+            if (isLoading || !hasMore) return;
+
+            isLoading = true;
+            spinner.classList.remove('hidden');
+            currentPage++;
+
+            try {
+                const searchParams = new URLSearchParams(window.location.search);
+                searchParams.set('page', currentPage);
+                
+                const response = await fetch(`${window.location.pathname}?${searchParams.toString()}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (response.ok) {
+                    const html = await response.text();
+                    
+                    if (html.trim() === '') {
+                        hasMore = false;
+                        spinner.classList.add('hidden');
+                        noMoreMsg.classList.remove('hidden');
+                    } else {
+                        // Append new items
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = html;
+                        const items = Array.from(tempDiv.children);
+                        
+                        items.forEach(item => {
+                            newsGrid.appendChild(item);
+                        });
+
+                        // Update count
+                        const totalItems = document.querySelectorAll('.news-item').length + (document.querySelector('.cursor-pointer') ? 1 : 0);
+                        currentCountDisplay.textContent = totalItems + (document.querySelector('[asp-action="Details"]') ? 1 : 0);
+                        // Fixing totalItems calculation: featured is 1, plus items in grid
+                        const countInGrid = newsGrid.querySelectorAll('.news-item').length;
+                        const hasFeatured = @(featured != null ? "true" : "false") === true;
+                        currentCountDisplay.textContent = countInGrid + (hasFeatured ? 1 : 0);
+
+                        if (items.length < 10) {
+                            hasMore = false;
+                            noMoreMsg.classList.remove('hidden');
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading more articles:', error);
+            } finally {
+                isLoading = false;
+                spinner.classList.add('hidden');
+            }
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    loadMoreArticles();
+                }
+            });
+        }, observerOptions);
+
+        if (hasMore) {
+            observer.observe(sentinel);
+        } else if (newsGrid.children.length > 0 || @(featured != null ? "true" : "false")) {
+             noMoreMsg.classList.remove('hidden');
+        }
+    </script>
+}

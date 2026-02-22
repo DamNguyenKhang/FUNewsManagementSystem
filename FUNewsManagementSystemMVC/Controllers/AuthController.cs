@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Mvc;
 using Services.Abstractions;
+using System.Security.Claims;
 using IAuthenticationService = Services.Abstractions.IAuthenticationService;
 
 namespace FUNewsManagementSystemMVC.Controllers
@@ -42,10 +43,7 @@ namespace FUNewsManagementSystemMVC.Controllers
 
             if (model.Email.Equals(adminEmail, StringComparison.OrdinalIgnoreCase) && model.Password == adminPassword)
             {
-                HttpContext.Session.SetString("AccountId", "0");
-                HttpContext.Session.SetString("AccountName", "Administrator");
-                HttpContext.Session.SetString("AccountEmail", adminEmail);
-                HttpContext.Session.SetString("Role", "Admin");
+                await SignInUser("0", "Administrator", adminEmail, "Admin");
                 return RedirectToAction("Dashboard", "Admin");
             }
 
@@ -56,26 +54,49 @@ namespace FUNewsManagementSystemMVC.Controllers
                 return View(model);
             }
 
-            HttpContext.Session.SetString("AccountId", account.Id.ToString());
-            HttpContext.Session.SetString("AccountName", account.AccountName ?? "User");
-            HttpContext.Session.SetString("AccountEmail", account.AccountEmail ?? "");
-            HttpContext.Session.SetString("Role", account.AccountRole.ToString() ?? "");
+            string role = account.AccountRole.ToString();
+            await SignInUser(account.Id.ToString(), account.AccountName ?? "User", account.AccountEmail ?? "", role);
 
             if (account.AccountRole == BusinessObject.Enums.AccountRole.Staff)
             {
                 return RedirectToAction("Dashboard", "Staff");
             }
-            else if (account.AccountRole == BusinessObject.Enums.AccountRole.Lecturer)
-            {
-                return RedirectToAction("Index", "Home");
-            }
             return RedirectToAction("Index", "Home");
         }
 
-        public IActionResult Logout()
+        private async Task SignInUser(string id, string name, string email, string role)
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, id),
+                new Claim(ClaimTypes.Name, name),
+                new Claim(ClaimTypes.Email, email),
+                new Claim(ClaimTypes.Role, role)
+            };
+
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+            var authProperties = new AuthenticationProperties
+            {
+                IsPersistent = true,
+                ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(20)
+            };
+
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                new ClaimsPrincipal(claimsIdentity),
+                authProperties);
+
+            HttpContext.Session.SetString("AccountId", id);
+            HttpContext.Session.SetString("AccountName", name);
+            HttpContext.Session.SetString("AccountEmail", email);
+            HttpContext.Session.SetString("Role", role);
+        }
+
+        public async Task<IActionResult> Logout()
         {
             HttpContext.Session.Clear();
-            AuthenticationHttpContextExtensions.SignOutAsync(HttpContext, CookieAuthenticationDefaults.AuthenticationScheme);
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Login");
         }
 
@@ -92,16 +113,16 @@ namespace FUNewsManagementSystemMVC.Controllers
         [HttpGet]
         public async Task<IActionResult> GoogleResponse()
         {
-            var result = await AuthenticationHttpContextExtensions.AuthenticateAsync(HttpContext, CookieAuthenticationDefaults.AuthenticationScheme);
+            var result = await HttpContext.AuthenticateAsync(GoogleDefaults.AuthenticationScheme);
 
             if (!result.Succeeded)
                 return RedirectToAction("Login");
 
-            var email = result.Principal.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+            var email = result.Principal.FindFirst(ClaimTypes.Email)?.Value;
 
             if (string.IsNullOrEmpty(email))
             {
-                await AuthenticationHttpContextExtensions.SignOutAsync(HttpContext, CookieAuthenticationDefaults.AuthenticationScheme);
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
                 TempData["ErrorMessage"] = "Could not retrieve email from Google account.";
                 return RedirectToAction("Login");
             }
@@ -110,24 +131,17 @@ namespace FUNewsManagementSystemMVC.Controllers
 
             if (account == null)
             {
-                await AuthenticationHttpContextExtensions.SignOutAsync(HttpContext, CookieAuthenticationDefaults.AuthenticationScheme);
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
                 TempData["ErrorMessage"] = "This account is not authorized to log in to the system. Please contact admin.";
                 return RedirectToAction("Login");
             }
 
-            // Set Session
-            HttpContext.Session.SetString("AccountId", account.Id.ToString());
-            HttpContext.Session.SetString("AccountName", account.AccountName ?? "User");
-            HttpContext.Session.SetString("AccountEmail", account.AccountEmail ?? "");
-            HttpContext.Session.SetString("Role", account.AccountRole.ToString() ?? "");
+            string role = account.AccountRole.ToString();
+            await SignInUser(account.Id.ToString(), account.AccountName ?? "User", account.AccountEmail ?? "", role);
 
             if (account.AccountRole == BusinessObject.Enums.AccountRole.Staff)
             {
                 return RedirectToAction("Dashboard", "Staff");
-            }
-            else if (account.AccountRole == BusinessObject.Enums.AccountRole.Lecturer)
-            {
-                return RedirectToAction("Index", "Home");
             }
 
             return RedirectToAction("Index", "Home");

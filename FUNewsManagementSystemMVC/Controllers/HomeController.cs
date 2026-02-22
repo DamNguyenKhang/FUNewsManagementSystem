@@ -16,14 +16,22 @@ namespace FUNewsManagementSystemMVC.Controllers
             _categoryService = categoryService;
         }
 
-        public async Task<IActionResult> Index(string? search, short? categoryId)
+        public async Task<IActionResult> Index(string? search, short? categoryId, int page = 1)
         {
-            var news = await _newsArticleService.GetAllNews(search, categoryId);
+            int pageSize = 10;
+            var news = await _newsArticleService.GetAllNews(search: search, categoryId: categoryId, status: true, pageIndex: page, pageSize: pageSize);
+            
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return PartialView("_NewsListPartial", news);
+            }
+
             var categories = await _categoryService.GetAllCategories(true);
             
             ViewBag.Search = search;
             ViewBag.CategoryId = categoryId;
             ViewBag.Categories = categories;
+            ViewBag.Page = page;
 
             return View(news);
         }

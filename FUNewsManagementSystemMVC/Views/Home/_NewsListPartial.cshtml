@@ -1,0 +1,29 @@
+@model IEnumerable<BusinessObject.Entities.NewsArticle>
+@{
+    const string defaultImage = "https://lh3.googleusercontent.com/aida-public/AB6AXuBdi3IT-JhoSBjYQhj8O_CyqAOH4bMRWXVzWj1odGuGMkw62ak11v6HxE--TiLf48TFW8OYUDC49cK-YqowXU-EeDhYfrbAJt-WW1FNXg74BhgsciIUM8RseHLRH_6VPn3fhTVBbvm4-3VreLVmWWxviBZ69cg9Df2MWpNB4ytzJRJn24KG-Ja0ne3XcUxZ5pZb-hE9D1O4guk4DyviF33vaT-Cyzm1IT1Z-fM9amccHB1sL3RvBrdTeyvs1nfIODZogs0Rn0-NuYa5";
+}
+
+@foreach (var article in Model)
+{
+    <a asp-controller="Home" asp-action="Details" asp-route-id="@article.Id" class="news-item group relative flex flex-col bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden h-full">
+        <div class="relative overflow-hidden aspect-video">
+            @if (article.Category != null)
+            {
+                <div class="absolute top-3 left-3 z-10">
+                    <span class="inline-block px-2.5 py-1 rounded bg-white/90 backdrop-blur text-primary text-xs font-bold uppercase tracking-wide shadow-sm">@article.Category.CategoryName</span>
+                </div>
+            }
+            <div class="w-full h-full bg-gray-200 bg-cover bg-center transform group-hover:scale-110 transition-transform duration-500" 
+                 style="background-image: url('@(string.IsNullOrEmpty(article.NewsArticleImage) ? defaultImage : article.NewsArticleImage)')"></div>
+        </div>
+        <div class="p-5 flex flex-col flex-grow">
+            <div class="flex items-center gap-2 mb-2 text-xs text-text-secondary">
+                <span class="flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[14px]">schedule</span> 
+                    @(article.CreatedDate?.ToString("MMM dd, yyyy") ?? "N/A")
+                </span>
+            </div>
+            <h3 class="text-lg font-bold text-gray-900 mb-2 leading-snug group-hover:text-primary transition-colors line-clamp-2">@article.NewsTitle</h3>
+        </div>
+    </a>
+}

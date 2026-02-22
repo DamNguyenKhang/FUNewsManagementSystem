@@ -42,10 +42,6 @@ namespace Services
 
         public async Task AddAccount(SystemAccount account)
         {
-            if (!string.IsNullOrEmpty(account.AccountPassword))
-            {
-                account.AccountPassword = PasswordHelper.HashPassword(account.AccountPassword);
-            }
             await _systemAccountRepository.AddAsync(account);
             await _unitOfWork.SaveChangesAsync();
         }

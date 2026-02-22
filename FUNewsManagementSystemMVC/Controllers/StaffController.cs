@@ -8,8 +8,11 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
 using System.Linq;
 
+using Microsoft.AspNetCore.Authorization;
+
 namespace FUNewsManagementSystemMVC.Controllers
 {
+    [Authorize(Roles = "Staff")]
     public class StaffController : Controller
     {
         private readonly ICategoryService _categoryService;
@@ -52,6 +55,7 @@ namespace FUNewsManagementSystemMVC.Controllers
             {
                 var category = _mapper.Map<Category>(model);
                 await _categoryService.AddCategory(category);
+                TempData["SuccessMessage"] = "Category created successfully.";
                 return RedirectToAction(nameof(Categories));
             }
             var categories = await _categoryService.GetAllCategories();
@@ -65,6 +69,7 @@ namespace FUNewsManagementSystemMVC.Controllers
             {
                 var category = _mapper.Map<Category>(model);
                 await _categoryService.UpdateCategory(category);
+                TempData["SuccessMessage"] = "Category updated successfully.";
                 return RedirectToAction(nameof(Categories));
             }
             var categories = await _categoryService.GetAllCategories();
@@ -74,19 +79,31 @@ namespace FUNewsManagementSystemMVC.Controllers
         [HttpPost]
         public async Task<IActionResult> DeleteCategory(short id)
         {
+            var newsCount = await _newsArticleService.GetNewsCount(categoryId: id);
+            if (newsCount > 0)
+            {
+                TempData["ErrorMessage"] = "Cannot delete category because it has associated news articles.";
+                return RedirectToAction(nameof(Categories));
+            }
             await _categoryService.DeleteCategory(id);
+            TempData["SuccessMessage"] = "Category deleted successfully.";
             return RedirectToAction(nameof(Categories));
         }
 
-        public async Task<IActionResult> News(string? search = null, short? categoryId = null, bool? status = null)
+        public async Task<IActionResult> News(string? search = null, short? categoryId = null, bool? status = null, int page = 1)
         {
-            var news = await _newsArticleService.GetAllNews(search, categoryId, status);
+            int pageSize = 10;
+            var news = await _newsArticleService.GetAllNews(search, categoryId, status, pageIndex: page, pageSize: pageSize);
             var categories = await _categoryService.GetAllCategories(true);
+            var totalItems = await _newsArticleService.GetNewsCount(search, categoryId, status);
 
             ViewBag.Search = search;
             ViewBag.CategoryId = categoryId;
             ViewBag.Status = status;
             ViewBag.Categories = categories;
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = (int)System.Math.Ceiling(totalItems / (double)pageSize);
+            ViewBag.TotalItems = totalItems;
 
             return View(news);
         }
@@ -151,6 +168,14 @@ namespace FUNewsManagementSystemMVC.Controllers
             ViewBag.Categories = await _categoryService.GetAllCategories(true);
             ViewBag.Tags = await _tagService.GetAllTags();
             return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteNews(string id)
+        {
+            await _newsArticleService.DeleteNewsArticle(id);
+            TempData["SuccessMessage"] = "Article deleted successfully.";
+            return RedirectToAction(nameof(News));
         }
 
         [HttpPost]

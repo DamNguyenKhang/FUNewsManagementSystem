@@ -7,12 +7,12 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <!-- Google Fonts: Lexend -->
-    <link href="https://fonts.googleapis.com" rel="preconnect"/>
-    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <!-- Material Symbols -->
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-    
+
     <script>
         tailwind.config = {
             darkMode: "class",
@@ -51,8 +51,11 @@
             <div class="flex flex-col gap-6">
                 <!-- Brand -->
                 <div class="flex items-center gap-3 px-2">
-                    <div class="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                        <span class="material-symbols-outlined filled">school</span>
+                    <div class="h-10 w-10 rounded-full overflow-hidden bg-white shadow-sm flex items-center justify-center">
+                        <img src="~/assets/images/fpt-logo.jpg"
+                             alt="FPT Logo"
+                             class="h-full w-full object-cover"
+                             asp-append-version="true" />
                     </div>
                     <div class="flex flex-col">
                         <h1 class="text-text-main text-base font-bold leading-tight">FPT Admin</h1>
@@ -69,18 +72,13 @@
                         <span class="material-symbols-outlined text-gray-400 group-hover:text-primary transition-colors">newspaper</span>
                         <span class="text-sm font-medium">News Management</span>
                     </a>
-                    <a asp-controller="Admin" asp-action="Reports" class="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors group @(ViewContext.RouteData.Values["Action"].ToString() == "Reports" ? "bg-primary/10 text-primary" : "text-text-secondary hover:bg-gray-50 hover:text-primary")">
-                        <span class="material-symbols-outlined @(ViewContext.RouteData.Values["Action"].ToString() == "Reports" ? "filled" : "text-gray-400 group-hover:text-primary") transition-colors">analytics</span>
-                        <span class="text-sm font-medium @(ViewContext.RouteData.Values["Action"].ToString() == "Reports" ? "font-semibold" : "")">Report News</span>
-                    </a>
-                    <!-- Active State Logic for Accounts -->
                     <a asp-controller="Admin" asp-action="Accounts" class="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors group @(ViewContext.RouteData.Values["Action"].ToString() == "Accounts" ? "bg-primary/10 text-primary" : "text-text-secondary hover:bg-gray-50 hover:text-primary")">
                         <span class="material-symbols-outlined @(ViewContext.RouteData.Values["Action"].ToString() == "Accounts" ? "filled" : "text-gray-400 group-hover:text-primary") transition-colors">group</span>
                         <span class="text-sm font-medium @(ViewContext.RouteData.Values["Action"].ToString() == "Accounts" ? "font-semibold" : "")">Account Management</span>
                     </a>
-                     <a asp-controller="Admin" asp-action="Profile" class="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors group @(ViewContext.RouteData.Values["Action"].ToString() == "Profile" ? "bg-primary/10 text-primary" : "text-text-secondary hover:bg-gray-50 hover:text-primary")">
-                        <span class="material-symbols-outlined @(ViewContext.RouteData.Values["Action"].ToString() == "Profile" ? "filled" : "text-gray-400 group-hover:text-primary") transition-colors">settings</span>
-                         <span class="text-sm font-medium @(ViewContext.RouteData.Values["Action"].ToString() == "Profile" ? "font-semibold" : "")">Settings</span>
+                    <a asp-controller="Admin" asp-action="Reports" class="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors group @(ViewContext.RouteData.Values["Action"].ToString() == "Reports" ? "bg-primary/10 text-primary" : "text-text-secondary hover:bg-gray-50 hover:text-primary")">
+                        <span class="material-symbols-outlined @(ViewContext.RouteData.Values["Action"].ToString() == "Reports" ? "filled" : "text-gray-400 group-hover:text-primary") transition-colors">analytics</span>
+                        <span class="text-sm font-medium @(ViewContext.RouteData.Values["Action"].ToString() == "Reports" ? "font-semibold" : "")">Report News</span>
                     </a>
                 </nav>
             </div>
@@ -102,7 +100,7 @@
             </div>
         </div>
     </aside>
-    
+
     <main class="flex-1 ml-64 flex flex-col h-screen relative bg-background-light overflow-y-auto">
         @RenderBody()
     </main>

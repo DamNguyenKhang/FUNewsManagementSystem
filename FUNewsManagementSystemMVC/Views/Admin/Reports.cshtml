@@ -1,9 +1,12 @@
 @model IEnumerable<BusinessObject.Entities.NewsArticle>
+@using System.Linq
 @{
     ViewData["Title"] = "News Reports";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
-    var activeCount = Model.Count(x => x.NewsStatus == true);
-    var inactiveCount = Model.Count(x => x.NewsStatus != true);
+    var fullNews = ViewBag.AllNewsForStats as IEnumerable<BusinessObject.Entities.NewsArticle> ?? new List<BusinessObject.Entities.NewsArticle>();
+    var activeCount = fullNews.Count(x => x.NewsStatus == true);
+    var inactiveCount = fullNews.Count(x => x.NewsStatus != true);
+    var totalCount = fullNews.Count();
 }
 
 <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0 z-10">
@@ -19,6 +22,26 @@
 
 <div class="flex-1 overflow-y-auto p-6 md:p-8 bg-background-light">
     <div class="max-w-7xl mx-auto flex flex-col gap-6">
+        <!-- Alerts -->
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="rounded-xl border border-green-100 bg-green-50 p-4 shadow-sm">
+                <div class="flex items-center gap-3 text-green-700">
+                    <span class="material-symbols-outlined text-[20px]">check_circle</span>
+                    <p class="text-sm font-bold">@TempData["SuccessMessage"]</p>
+                </div>
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="rounded-xl border border-red-100 bg-red-50 p-4 shadow-sm">
+                <div class="flex items-center gap-3 text-red-700">
+                    <span class="material-symbols-outlined text-[20px]">error</span>
+                    <p class="text-sm font-bold">@TempData["ErrorMessage"]</p>
+                </div>
+            </div>
+        }
+
         <!-- Header Section -->
         <div class="flex flex-col gap-2">
             <h1 class="text-3xl font-bold tracking-tight text-text-main">News Statistics Report</h1>
@@ -74,8 +97,8 @@
                     <span class="material-symbols-outlined text-primary text-[20px]">equalizer</span>
                 </div>
                 <div>
-                    <span class="text-sm font-medium text-text-secondary">Results Summary:</span>
-                    <span class="text-base font-bold text-text-main ml-1">@Model.Count() records found</span>
+                    <span class="text-sm font-medium text-text-secondary">Full Period Summary:</span>
+                    <span class="text-base font-bold text-text-main ml-1">@totalCount records found</span>
                 </div>
             </div>
             <div class="flex items-center gap-6">
@@ -141,10 +164,10 @@
                                     </td>
                                     <td class="px-6 py-4 text-right">
                                         <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button class="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-blue-600 transition-colors">
+                                            <a asp-action="EditNews" asp-route-id="@news.Id" class="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-blue-600 transition-colors" title="Edit">
                                                 <span class="material-symbols-outlined text-[20px]">edit</span>
-                                            </button>
-                                            <button class="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-red-600 transition-colors">
+                                            </a>
+                                            <button onclick="confirmDelete('@news.Id', '@news.NewsTitle.Replace("'", "\\'")')" class="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-red-600 transition-colors" title="Delete">
                                                 <span class="material-symbols-outlined text-[20px]">delete</span>
                                             </button>
                                         </div>
@@ -169,19 +192,140 @@
                 <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
                     <div>
                         <p class="text-sm text-gray-700">
-                            Showing <span class="font-bold">1</span> to <span class="font-bold">@Model.Count()</span> of <span class="font-bold">@Model.Count()</span> results
+                            Showing <span class="font-bold">@((ViewBag.CurrentPage - 1) * 10 + 1)</span> to 
+                            <span class="font-bold">@(System.Math.Min(ViewBag.CurrentPage * 10, ViewBag.TotalItems))</span> of 
+                            <span class="font-bold">@ViewBag.TotalItems</span> results
                         </p>
                     </div>
                     <div>
                         <nav aria-label="Pagination" class="isolate inline-flex -space-x-px rounded-md shadow-sm">
-                            <a class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0" href="#">
-                                <span class="material-symbols-outlined text-[20px]">chevron_left</span>
-                            </a>
-                            <a aria-current="page" class="relative z-10 inline-flex items-center bg-primary px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="#">1</a>
-                            <a class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0" href="#">
-                                <span class="material-symbols-outlined text-[20px]">chevron_right</span>
-                            </a>
+                            @if (ViewBag.CurrentPage > 1)
+                            {
+                                <a asp-action="Reports" asp-route-page="@(ViewBag.CurrentPage - 1)" asp-route-startDate="@ViewBag.StartDate" asp-route-endDate="@ViewBag.EndDate" class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
+                                    <span class="material-symbols-outlined text-[20px]">chevron_left</span>
+                                </a>
+                            }
+
+                            @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                            {
+                                if (i == ViewBag.CurrentPage)
+                                {
+                                    <a aria-current="page" class="relative z-10 inline-flex items-center bg-primary px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="#">@i</a>
+                                }
+                                else
+                                {
+                                    <a asp-action="Reports" asp-route-page="@i" asp-route-startDate="@ViewBag.StartDate" asp-route-endDate="@ViewBag.EndDate" class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">@i</a>
+                                }
+                            }
+
+                            @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                            {
+                                <a asp-action="Reports" asp-route-page="@(ViewBag.CurrentPage + 1)" asp-route-startDate="@ViewBag.StartDate" asp-route-endDate="@ViewBag.EndDate" class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
+                                    <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+                                </a>
+                            }
                         </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            <!-- News by Category Card -->
+            <div class="rounded-3xl border border-gray-100 bg-white p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+                <div class="flex items-center gap-3 mb-8">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-orange-50 text-primary">
+                        <span class="material-symbols-outlined text-[22px] filled">pie_chart</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900">News by Category</h3>
+                </div>
+                
+                <div class="relative flex flex-col items-center">
+                    <div class="relative h-[250px] w-[250px] mb-8">
+                        <canvas id="categoryChart"></canvas>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                            <span class="text-3xl font-black text-gray-900">@totalCount</span>
+                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total Posts</span>
+                        </div>
+                    </div>
+
+                    <div class="w-full space-y-3">
+                        @{
+                            var categoryData = fullNews
+                                .GroupBy(x => x.Category?.CategoryName ?? "Uncategorized")
+                                .Select(g => new { 
+                                    Label = g.Key, 
+                                    Count = g.Count(),
+                                    Percent = fullNews.Any() ? (int)Math.Round((double)g.Count() / fullNews.Count() * 100) : 0
+                                })
+                                .OrderByDescending(x => x.Count)
+                                .ToList();
+                            
+                            var chartColors = new[] { "#22c55e", "#f37120", "#3b82f6", "#8b5cf6", "#f59e0b" };
+                        }
+
+                        @for (int i = 0; i < categoryData.Count; i++)
+                        {
+                            var item = categoryData[i];
+                            var color = chartColors[i % chartColors.Length];
+                            <div class="flex items-center justify-between p-3.5 rounded-2xl bg-gray-50/50 group hover:bg-gray-50 transition-colors">
+                                <div class="flex items-center gap-3">
+                                    <span class="h-2 w-2 rounded-full" style="background-color: @color"></span>
+                                    <span class="text-sm font-semibold text-gray-600 group-hover:text-gray-900 transition-colors">@item.Label</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm font-bold text-gray-900">@item.Percent%</span>
+                                    <span class="text-xs font-medium text-gray-400">(@item.Count)</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Publication Status Card -->
+            <div class="rounded-3xl border border-gray-100 bg-white p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col">
+                <div class="flex items-center gap-3 mb-10">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+                        <span class="material-symbols-outlined text-[22px] filled">bar_chart</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900">Publication Status</h3>
+                </div>
+
+                <div class="flex-grow space-y-10">
+                    <!-- Published -->
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-end">
+                            <div class="space-y-1">
+                                <h4 class="text-[11px] font-black text-gray-400 uppercase tracking-widest">Published</h4>
+                                <p class="text-[11px] font-medium text-gray-400 italic">Live and visible to all students</p>
+                            </div>
+                            <span class="text-xl font-black text-emerald-500">@activeCount</span>
+                        </div>
+                        <div class="h-4 w-full bg-gray-100 rounded-full overflow-hidden">
+                            @{
+                                var activePercent = fullNews.Any() ? (activeCount * 100 / fullNews.Count()) : 0;
+                            }
+                            <div class="h-full bg-emerald-500 rounded-full transition-all duration-1000 ease-out" style="width: @activePercent%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Draft -->
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-end">
+                            <div class="space-y-1">
+                                <h4 class="text-[11px] font-black text-gray-400 uppercase tracking-widest">Draft</h4>
+                                <p class="text-[11px] font-medium text-gray-400 italic">Pending review or final touches</p>
+                            </div>
+                            <span class="text-xl font-black text-orange-500">@inactiveCount</span>
+                        </div>
+                        <div class="h-4 w-full bg-gray-100 rounded-full overflow-hidden">
+                            @{
+                                var inactivePercent = fullNews.Any() ? (inactiveCount * 100 / fullNews.Count()) : 0;
+                            }
+                            <div class="h-full bg-gradient-to-r from-orange-400 to-orange-600 rounded-full transition-all duration-1000 ease-out" style="width: @inactivePercent%"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -212,32 +356,117 @@
     }
 </style>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const startInput = document.querySelector('input[name="startDate"]');
-        const endInput = document.querySelector('input[name="endDate"]');
-        const errorMsg = document.getElementById('dateError');
-        
-        function validateDates() {
-            if (startInput.value && endInput.value) {
-                if (new Date(endInput.value) < new Date(startInput.value)) {
-                    errorMsg.classList.remove('hidden');
-                    endInput.classList.add('border-red-500', 'bg-red-50');
-                    return false;
-                }
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Data for Category Chart
+            @{
+                var catLabels = Json.Serialize(categoryData.Select(x => x.Label));
+                var catValues = Json.Serialize(categoryData.Select(x => x.Count));
             }
-            errorMsg.classList.add('hidden');
-            endInput.classList.remove('border-red-500', 'bg-red-50');
-            return true;
+
+            const catCtx = document.getElementById('categoryChart').getContext('2d');
+            new Chart(catCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: @catLabels,
+                    datasets: [{
+                        data: @catValues,
+                        backgroundColor: ['#22c55e', '#f37120', '#3b82f6', '#8b5cf6', '#f59e0b'],
+                        borderWidth: 0,
+                        hoverOffset: 10,
+                        cutout: '82%'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.label}: ${context.raw} posts`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Date validation
+            const startInput = document.querySelector('input[name="startDate"]');
+            const endInput = document.querySelector('input[name="endDate"]');
+            const errorMsg = document.getElementById('dateError');
+            
+            function validateDates() {
+                if (startInput.value && endInput.value) {
+                    if (new Date(endInput.value) < new Date(startInput.value)) {
+                        errorMsg.classList.remove('hidden');
+                        endInput.classList.add('border-red-500', 'bg-red-50');
+                        return false;
+                    }
+                }
+                errorMsg.classList.add('hidden');
+                endInput.classList.remove('border-red-500', 'bg-red-50');
+                return true;
+            }
+
+            startInput.addEventListener('change', validateDates);
+            endInput.addEventListener('change', validateDates);
+            
+            document.querySelector('form').addEventListener('submit', function(e) {
+                if (!validateDates()) {
+                    e.preventDefault();
+                }
+            });
+        });
+
+        // Delete Confirmation Logic
+        function confirmDelete(id, title) {
+            document.getElementById('delete-item-title').innerText = title;
+            document.getElementById('delete-form').action = '/Admin/DeleteNews/' + id;
+            document.getElementById('deleteModal').classList.remove('hidden');
         }
 
-        startInput.addEventListener('change', validateDates);
-        endInput.addEventListener('change', validateDates);
-        
-        document.querySelector('form').addEventListener('submit', function(e) {
-            if (!validateDates()) {
-                e.preventDefault();
-            }
-        });
-    });
-</script>
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.add('hidden');
+        }
+    </script>
+}
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closeDeleteModal()"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <span class="material-symbols-outlined text-red-600">delete</span>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Delete News Article</h3>
+                        <div class="mt-2 text-left">
+                            <p class="text-sm text-gray-500">Are you sure you want to delete "<span id="delete-item-title" class="font-bold"></span>"? This action cannot be undone.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <form id="delete-form" method="post">
+                    <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm font-bold">
+                        Delete
+                    </button>
+                </form>
+                <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:w-auto sm:text-sm" onclick="closeDeleteModal()">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
