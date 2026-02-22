@@ -1,0 +1,156 @@
+@model FUNewsManagementSystemMVC.Models.StaffProfileViewModel
+@{
+    ViewData["Title"] = "Profile Settings";
+    Layout = "~/Views/Shared/_StaffLayout.cshtml";
+}
+
+<div class="p-8 max-w-6xl mx-auto">
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-gray-900">Profile Settings</h1>
+        <p class="text-text-secondary text-sm mt-1">Manage your personal information, department details, and account security.</p>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-xl flex items-center gap-3 animate-fade-in">
+            <span class="material-symbols-outlined filled">check_circle</span>
+            <span class="text-sm font-medium">@TempData["SuccessMessage"]</span>
+        </div>
+    }
+
+    <form asp-action="UpdateProfile" method="post">
+        <input type="hidden" asp-for="Id" />
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Left Sidebar: User Summary -->
+            <div class="lg:col-span-4">
+                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 text-center sticky top-8">
+                    <div class="relative inline-block mb-6">
+                        <div class="h-32 w-32 rounded-full overflow-hidden border-4 border-gray-50 shadow-inner bg-gray-100 mx-auto">
+                            <img src="https://ui-avatars.com/api/?name=@Model.AccountName&size=128&background=f37120&color=fff" alt="Avatar" class="h-full w-full object-cover">
+                        </div>
+                        <button type="button" class="absolute bottom-1 right-1 h-9 w-9 bg-primary text-white rounded-full border-4 border-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg">
+                            <span class="material-symbols-outlined text-[18px]">photo_camera</span>
+                        </button>
+                    </div>
+                    
+                    <h2 class="text-xl font-bold text-gray-900 mb-1">@Model.AccountName</h2>
+                    <p class="text-primary text-sm font-medium">Staff - @Model.Department</p>
+                    
+                    <div class="mt-8 space-y-4 text-left border-t border-gray-50 pt-8">
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-text-secondary">Status</span>
+                            <span class="px-2.5 py-0.5 rounded-full bg-green-100 text-green-700 text-[10px] font-bold uppercase tracking-wider">@Model.Status</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-text-secondary">Joined</span>
+                            <span class="font-semibold text-gray-900">@Model.JoinedDate?.ToString("MMM dd, yyyy")</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-text-secondary">Last Login</span>
+                            <span class="font-semibold text-gray-900">Today, @Model.LastLogin?.ToString("hh:mm tt")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Content: Detailed Forms -->
+            <div class="lg:col-span-8 space-y-8">
+                <!-- Personal Information -->
+                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/30">
+                        <h3 class="text-lg font-bold text-gray-900">Personal Information</h3>
+                        <span class="material-symbols-outlined text-gray-400">badge</span>
+                    </div>
+                    <div class="p-6 space-y-6">
+                        <div class="space-y-2">
+                            <label asp-for="AccountName" class="text-sm font-bold text-gray-700">Full Name</label>
+                            <div class="relative group">
+                                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors">person</span>
+                                <input asp-for="AccountName" class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none" placeholder="Enter your full name">
+                            </div>
+                            <span asp-validation-for="AccountName" class="text-red-500 text-xs"></span>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label asp-for="AccountEmail" class="text-sm font-bold text-gray-700">FPT Email <span class="text-[10px] font-normal text-text-secondary ml-1 mt-0.5">(Read-only)</span></label>
+                                <div class="relative">
+                                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">mail</span>
+                                    <input asp-for="AccountEmail" readonly class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-text-secondary cursor-not-allowed outline-none" placeholder="email@fpt.edu.vn">
+                                </div>
+                            </div>
+                            <div class="space-y-2">
+                                <label asp-for="PhoneNumber" class="text-sm font-bold text-gray-700">Phone Number</label>
+                                <div class="relative group">
+                                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors">call</span>
+                                    <input asp-for="PhoneNumber" class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none" placeholder="+84 000 000 000">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label asp-for="Department" class="text-sm font-bold text-gray-700">Department</label>
+                            <div class="relative group">
+                                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">domain</span>
+                                <select asp-for="Department" class="w-full pl-10 pr-10 py-2.5 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none appearance-none cursor-pointer">
+                                    <option value="Academic Office">Academic Office</option>
+                                    <option value="Human Resources">Human Resources</option>
+                                    <option value="IT Support">IT Support</option>
+                                    <option value="Marketing">Marketing</option>
+                                </select>
+                                <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">expand_more</span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label asp-for="Bio" class="text-sm font-bold text-gray-700">Bio / Notes</label>
+                            <textarea asp-for="Bio" rows="4" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none resize-none" placeholder="Brief description about your role..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Settings -->
+                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/30">
+                        <h3 class="text-lg font-bold text-gray-900">Security Settings</h3>
+                        <span class="material-symbols-outlined text-gray-400">lock</span>
+                    </div>
+                    <div class="p-6 space-y-6">
+                        <div class="space-y-2">
+                            <label asp-for="CurrentPassword" class="text-sm font-bold text-gray-700">Current Password</label>
+                            <input asp-for="CurrentPassword" type="password" class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none" placeholder="••••••••">
+                            <span asp-validation-for="CurrentPassword" class="text-red-500 text-xs"></span>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label asp-for="NewPassword" class="text-sm font-bold text-gray-700">New Password</label>
+                                <input asp-for="NewPassword" type="password" class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none" placeholder="••••••••">
+                                <p class="text-[10px] text-text-secondary mt-1">Minimum 8 characters, mixed case & symbols.</p>
+                                <span asp-validation-for="NewPassword" class="text-red-500 text-[10px]"></span>
+                            </div>
+                            <div class="space-y-2">
+                                <label asp-for="ConfirmNewPassword" class="text-sm font-bold text-gray-700">Confirm New Password</label>
+                                <input asp-for="ConfirmNewPassword" type="password" class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none" placeholder="••••••••">
+                                <span asp-validation-for="ConfirmNewPassword" class="text-red-500 text-[10px]"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex items-center justify-end gap-4 pb-12">
+                    <button type="button" onclick="history.back()" class="px-6 py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-text-secondary hover:bg-gray-50 transition-all">Cancel</button>
+                    <button type="submit" class="px-8 py-2.5 rounded-xl bg-primary hover:bg-primary-dark text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[20px]">save</span>
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

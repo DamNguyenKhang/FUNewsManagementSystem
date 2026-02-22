@@ -1,0 +1,127 @@
+@model BusinessObject.Entities.NewsArticle
+@{
+    ViewData["Title"] = Model.NewsTitle;
+    var mockMainImage = "https://lh3.googleusercontent.com/aida-public/AB6AXuB9igh-7F9vJxckJ-BVjEOunivJdY7DX_43WVDC6vBmOx5hO_TSbFnxlXi5WVmuYZCN6waNuljCbAT-S77UDZcNcn_RrhY5C9fJhRtLSxOuuialvT3bIgB1u75AFli6DJSXPyoO6vbrwcsoBUqRpmfp_Q1vEFm2jRiMZxoU-OUQuB4Q4w0cBXgWdceCbaM-YAEhfOyZmLhxXWNGI05R5e5RnFCEf3q_rVxZLfIpgpQdjUeEJrSDdQc7oQgyDAXXxd0QCUpmCkfvwgZv";
+    var relatedNews = ViewBag.RelatedNews as IEnumerable<BusinessObject.Entities.NewsArticle>;
+}
+
+<div class="bg-gradient-to-b from-[#fcf9f8] to-white pb-8 pt-6">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        @* Breadcrumbs *@
+        <nav class="flex items-center text-sm text-gray-500 mb-6">
+            <a asp-controller="Home" asp-action="Index" class="hover:text-primary transition-colors">Home</a>
+            <span class="mx-2 text-gray-300">/</span>
+            <a asp-controller="Home" asp-action="Index" class="hover:text-primary transition-colors">News</a>
+            <span class="mx-2 text-gray-300">/</span>
+            <span class="font-medium text-gray-900 truncate">@Model.NewsTitle</span>
+        </nav>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+            @* Main Content *@
+            <div class="lg:col-span-8">
+                @if (Model.Category != null)
+                {
+                    <div class="mb-4">
+                        <span class="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary border border-primary/20">
+                            @Model.Category.CategoryName
+                        </span>
+                    </div>
+                }
+                
+                <h1 class="mb-6 text-3xl font-bold leading-tight text-gray-900 sm:text-4xl lg:text-[2.75rem] lg:leading-[1.15]">@Model.NewsTitle</h1>
+                
+                @* Author and Info Line *@
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-10 pb-6 border-b border-gray-100">
+                    <div class="flex items-center gap-6">
+                        <div class="flex items-center gap-3">
+                            <div class="h-10 w-10 rounded-full overflow-hidden bg-gray-200">
+                                <img src="https://ui-avatars.com/api/?name=@(Model.CreatedBy?.AccountName ?? "Author")&background=random" alt="Author" class="h-full w-full object-cover">
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-sm font-bold text-gray-900">@(Model.CreatedBy?.AccountName ?? "FPT Author")</span>
+                                <span class="text-xs text-text-secondary">University Press</span>
+                            </div>
+                        </div>
+                        <div class="h-4 w-px bg-gray-300"></div>
+                        <div class="flex items-center gap-2 text-sm text-text-secondary">
+                            <span class="material-symbols-outlined text-sm">calendar_today</span>
+                            <span>@(Model.CreatedDate?.ToString("MMM dd, yyyy") ?? "N/A")</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-sm text-text-secondary">
+                            <span class="material-symbols-outlined text-sm">schedule</span>
+                            <span>5 min read</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 text-gray-400">
+                        <button class="hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">share</span></button>
+                        <button class="hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">bookmark</span></button>
+                        <button class="hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">print</span></button>
+                    </div>
+                </div>
+
+                <div class="group relative mb-10 overflow-hidden rounded-2xl bg-gray-100 shadow-sm">
+                    <img alt="@Model.NewsTitle" class="aspect-video w-full object-cover" src="@(string.IsNullOrEmpty(Model.NewsArticleImage) ? mockMainImage : Model.NewsArticleImage)"/>
+                    <div class="absolute bottom-4 left-4 right-4 bg-black/40 backdrop-blur-md px-4 py-2 rounded-lg text-white text-xs">
+                        @(string.IsNullOrEmpty(Model.Headline) ? "News Preview" : Model.Headline)
+                    </div>
+                </div>
+
+                <div class="prose-custom max-w-none text-gray-700 leading-relaxed">
+                    <p class="text-xl font-light text-gray-600 leading-relaxed border-l-4 border-primary pl-6 italic mb-10">
+                        @Model.Headline
+                    </p>
+                    <div class="text-lg">
+                        @Html.Raw(Model.NewsContent)
+                    </div>
+                    
+                    @if (Model.Tags != null && Model.Tags.Any())
+                    {
+                        <div class="mt-12 pt-8 border-t border-gray-100 flex flex-wrap gap-2">
+                            @foreach (var tag in Model.Tags)
+                            {
+                                <span class="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-primary/10 hover:text-primary transition-colors cursor-pointer">#@tag.TagName</span>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            @* Sidebar *@
+            <aside class="lg:col-span-4 space-y-8">
+                <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5 hover:shadow-md transition-shadow">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-bold text-gray-900 border-l-4 border-primary pl-3">Related News</h3>
+                        <a asp-action="Index" class="text-xs font-bold text-primary hover:underline">View All</a>
+                    </div>
+                    
+                    <div class="space-y-6">
+                        @if (relatedNews != null && relatedNews.Any())
+                        {
+                            foreach (var item in relatedNews)
+                            {
+                                <a asp-action="Details" asp-route-id="@item.Id" class="group flex gap-4 items-start cursor-pointer">
+                                    <div class="h-20 w-24 shrink-0 overflow-hidden rounded-xl bg-gray-100">
+                                        <img class="h-full w-full object-cover transform group-hover:scale-110 transition-transform duration-500" 
+                                             src="@(string.IsNullOrEmpty(item.NewsArticleImage) ? mockMainImage : item.NewsArticleImage)" alt="@item.NewsTitle">
+                                    </div>
+                                    <div class="flex flex-col gap-1">
+                                        @if (item.Category != null)
+                                        {
+                                            <span class="text-[10px] font-bold text-primary uppercase tracking-wider">@item.Category.CategoryName</span>
+                                        }
+                                        <h4 class="text-sm font-bold text-gray-900 line-clamp-2 leading-snug group-hover:text-primary transition-colors">@item.NewsTitle</h4>
+                                        <span class="text-[11px] text-text-secondary">@(item.CreatedDate?.ToString("MMM dd, yyyy") ?? "N/A")</span>
+                                    </div>
+                                </a>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-sm text-text-secondary italic text-center py-4">No related articles found.</p>
+                        }
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+</div>

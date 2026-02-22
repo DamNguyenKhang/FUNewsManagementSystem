@@ -1,0 +1,32 @@
+@{
+    ViewData["Title"] = "Profile";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="p-12 overflow-y-auto h-screen">
+    <h1 class="text-3xl font-bold text-slate-900 mb-8">Profile Settings</h1>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col items-center text-center">
+                <div class="w-32 h-32 rounded-full bg-slate-200 mb-4 border-4 border-slate-100 overflow-hidden">
+                    <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDubW44fanaGNrEnF5JBpEH20Cfb215mXd1133NaCOtBpiemzFFlj9aLaKTQ1U6nMZYYYg0ZwLVxV6W3Ko-W1K7S5KDI4F1Hya1c98I6FLzWg-G2CzMKLXmLyC00U9D5tCUZ3hcCYWd_lEBNFLRc_He6RKbL5fRyLp2nf5NygM_Q01j_izvdcR1VuRyIN8kZQnrE9nb94zvf223HDHzEYIB1JeIUxzyH1Ul2giO7kP1TY6wYkeEpDjCZddnGpM_R80NnetEgQxSKy_m" class="w-full h-full object-cover" />
+                </div>
+                <h2 class="text-xl font-bold">Nguyen Van A</h2>
+                <p class="text-primary font-medium text-sm">Staff - Academic Office</p>
+            </div>
+        </div>
+        <div class="lg:col-span-2 space-y-6">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                <h3 class="text-lg font-bold mb-4">Personal Information</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="md:col-span-2"><label class="block text-sm font-medium mb-1">Full Name</label><input type="text" class="w-full rounded-lg border-slate-300 p-2" defaultValue="Nguyen Van A" /></div>
+                    <div><label class="block text-sm font-medium mb-1">Email</label><input type="text" class="w-full rounded-lg border-slate-200 bg-slate-50 p-2" defaultValue="anv@fpt.edu.vn" disabled /></div>
+                    <div><label class="block text-sm font-medium mb-1">Phone</label><input type="text" class="w-full rounded-lg border-slate-300 p-2" defaultValue="+84 901 234 567" /></div>
+                </div>
+                <div class="mt-6 flex justify-end gap-3">
+                    <button class="px-6 py-2 bg-primary text-white rounded-lg font-bold">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

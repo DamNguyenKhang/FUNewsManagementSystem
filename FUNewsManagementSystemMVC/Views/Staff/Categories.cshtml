@@ -1,0 +1,305 @@
+@model IEnumerable<BusinessObject.Entities.Category>
+@{
+    ViewData["Title"] = "Categories";
+    Layout = "~/Views/Shared/_StaffLayout.cshtml";
+}
+
+<header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0 z-10">
+    <div class="flex items-center gap-2 text-sm">
+        <span class="text-text-secondary">Staff</span>
+        <span class="text-gray-300">/</span>
+        <span class="font-medium text-gray-900">Categories</span>
+    </div>
+    <div class="flex items-center gap-4">
+        <span class="material-symbols-outlined text-gray-400">notifications</span>
+    </div>
+</header>
+
+<div class="flex-1 overflow-y-auto p-6 md:p-8 bg-background-light">
+    <div class="max-w-7xl mx-auto flex flex-col gap-8">
+        <!-- Header Section -->
+        <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div class="flex flex-col gap-2">
+                <h1 class="text-3xl font-bold tracking-tight text-text-main">Category Management</h1>
+                <p class="text-text-secondary">Manage news categories and their visibility across the platform.</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="openModal()" class="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-white shadow-md shadow-primary/20 hover:bg-primary-dark transition-all focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2">
+                    <span class="material-symbols-outlined text-[20px]">add</span>
+                    Create Category
+                </button>
+            </div>
+        </div>
+
+        <!-- Filters & Search -->
+        <form method="get" asp-action="Categories" class="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:flex-row md:items-center md:justify-between">
+            <div class="relative w-full md:max-w-md">
+                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                    <span class="material-symbols-outlined text-gray-400">search</span>
+                </div>
+                <input type="text" name="search" value="@ViewBag.Search" class="block w-full rounded-lg border-gray-200 bg-gray-50 py-2.5 pl-10 pr-4 text-sm text-text-main placeholder-gray-400 focus:border-primary focus:bg-white focus:ring-primary transition-colors" placeholder="Search categories..." onchange="this.form.submit()" />
+            </div>
+            <div class="flex items-center gap-3 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+                <div class="flex items-center gap-2 whitespace-nowrap">
+                    <span class="text-sm font-medium text-text-secondary">Status:</span>
+                    <select name="isActive" class="rounded-lg border-gray-200 bg-gray-50 py-2 pl-3 pr-8 text-sm text-text-main focus:border-primary focus:ring-primary cursor-pointer" onchange="this.form.submit()">
+                        <option value="">All Status</option>
+                        <option value="true" selected="@(ViewBag.IsActive == true)">Active</option>
+                        <option value="false" selected="@(ViewBag.IsActive == false)">Hidden</option>
+                    </select>
+                </div>
+                <button type="submit" class="hidden md:inline-flex h-10 items-center justify-center rounded-lg bg-gray-100 px-4 text-sm font-medium text-text-main hover:bg-gray-200 transition-colors">
+                    Search
+                </button>
+            </div>
+        </form>
+
+        <!-- Data Table -->
+        <div class="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-gray-50 text-xs uppercase text-text-secondary font-semibold">
+                        <tr>
+                            <th class="px-6 py-4" scope="col">ID</th>
+                            <th class="px-6 py-4" scope="col">Category Name</th>
+                            <th class="px-6 py-4" scope="col">Description</th>
+                            <th class="px-6 py-4" scope="col">Status</th>
+                            <th class="px-6 py-4 text-right" scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 bg-white">
+                        @foreach (var item in Model)
+                        {
+                            <tr class="group hover:bg-orange-50/30 transition-colors">
+                                <td class="px-6 py-4 text-gray-400 font-medium">#@item.Id.ToString("D3")</td>
+                                <td class="px-6 py-4 font-bold text-text-main group-hover:text-primary transition-colors">@item.CategoryName</td>
+                                <td class="px-6 py-4 text-text-secondary">@item.CategoryDesciption</td>
+                                <td class="px-6 py-4">
+                                    @if (item.IsActive == true)
+                                    {
+                                        <span class="inline-flex items-center rounded-md bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-700/10">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="inline-flex items-center rounded-md bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-600/10">Hidden</span>
+                                    }
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button onclick="openEditModal('@item.Id', '@item.CategoryName', '@item.CategoryDesciption', '@(item.IsActive == true ? "true" : "false")')" class="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-blue-600 transition-colors" title="Edit">
+                                            <span class="material-symbols-outlined text-[20px]">edit</span>
+                                        </button>
+                                        <button onclick="confirmDelete('@item.Id', '@item.CategoryName')" class="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-red-600 transition-colors" title="Delete">
+                                            <span class="material-symbols-outlined text-[20px]">delete</span>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="flex items-center justify-between border-t border-gray-200 bg-gray-50 px-4 py-3 sm:px-6">
+                <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-sm text-gray-700">
+                            Showing <span class="font-bold">1</span> to <span class="font-bold">@Model.Count()</span> of <span class="font-bold">@Model.Count()</span> results
+                        </p>
+                    </div>
+                    <div>
+                        <nav aria-label="Pagination" class="isolate inline-flex -space-x-px rounded-md shadow-sm">
+                            <a class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0" href="#">
+                                <span class="material-symbols-outlined text-[20px]">chevron_left</span>
+                            </a>
+                            <a aria-current="page" class="relative z-10 inline-flex items-center bg-primary px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="#">1</a>
+                            <a class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0" href="#">
+                                <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+                            </a>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Category Modal -->
+<div id="createCategoryModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closeModal()"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-primary/10 sm:mx-0 sm:h-10 sm:w-10">
+                        <span class="material-symbols-outlined text-primary">category</span>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Create New Category</h3>
+                        <div class="mt-2 text-left">
+                            <form id="createCategoryForm" method="post" asp-action="CreateCategory" asp-controller="Staff">
+                                <div class="space-y-4">
+                                    <div asp-validation-summary="All" class="text-xs text-red-600"></div>
+                                    <div>
+                                        <label for="CategoryName" class="block text-sm font-medium text-gray-700 text-left">Category Name</label>
+                                        <input type="text" name="CategoryName" id="CategoryName" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                                    </div>
+                                    <div>
+                                        <label for="CategoryDesciption" class="block text-sm font-medium text-gray-700 text-left">Description</label>
+                                        <textarea name="CategoryDesciption" id="CategoryDesciption" required rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"></textarea>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <input type="hidden" name="IsActive" value="false">
+                                        <input type="checkbox" name="IsActive" id="IsActive" value="true" checked class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary">
+                                        <label for="IsActive" class="text-sm font-medium text-gray-700">Active and Visible</label>
+                                    </div>
+                                </div>
+                                <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                                    <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm font-bold">
+                                        Create
+                                    </button>
+                                    <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:w-auto sm:text-sm" onclick="closeModal()">
+                                        Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Category Modal -->
+<div id="editCategoryModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closeEditModal()"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <span class="material-symbols-outlined text-blue-600">edit</span>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Edit Category</h3>
+                        <div class="mt-2 text-left">
+                            <form id="editCategoryForm" method="post" asp-action="UpdateCategory" asp-controller="Staff">
+                                <input type="hidden" name="Id" id="edit-Id">
+                                <div class="space-y-4">
+                                    <div asp-validation-summary="All" class="text-xs text-red-600"></div>
+                                    <div>
+                                        <label for="edit-CategoryName" class="block text-sm font-medium text-gray-700">Category Name</label>
+                                        <input type="text" name="CategoryName" id="edit-CategoryName" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                                    </div>
+                                    <div>
+                                        <label for="edit-CategoryDesciption" class="block text-sm font-medium text-gray-700">Description</label>
+                                        <textarea name="CategoryDesciption" id="edit-CategoryDesciption" required rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"></textarea>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <input type="hidden" name="IsActive" value="false">
+                                        <input type="checkbox" name="IsActive" id="edit-IsActive" value="true" class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary">
+                                        <label for="edit-IsActive" class="text-sm font-medium text-gray-700">Active and Visible</label>
+                                    </div>
+                                </div>
+                                <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                                    <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm font-bold">
+                                        Save Changes
+                                    </button>
+                                    <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:w-auto sm:text-sm" onclick="closeEditModal()">
+                                        Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteConfirmModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closeDeleteModal()"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <span class="material-symbols-outlined text-red-600">warning</span>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Delete Category</h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-gray-500">Are you sure you want to delete <span id="delete-category-name" class="font-bold"></span>? This action cannot be undone.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <form method="post" asp-action="DeleteCategory" asp-controller="Staff">
+                    <input type="hidden" name="id" id="delete-Id">
+                    <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm font-bold">
+                        Delete
+                    </button>
+                </form>
+                <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" onclick="closeDeleteModal()">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openModal() {
+        document.getElementById('createCategoryModal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+        document.getElementById('createCategoryModal').classList.add('hidden');
+    }
+
+    function openEditModal(id, name, desc, isActive) {
+        document.getElementById('edit-Id').value = id;
+        document.getElementById('edit-CategoryName').value = name;
+        document.getElementById('edit-CategoryDesciption').value = desc;
+        document.getElementById('edit-IsActive').checked = (isActive === 'true');
+        document.getElementById('editCategoryModal').classList.remove('hidden');
+    }
+
+    function closeEditModal() {
+        document.getElementById('editCategoryModal').classList.add('hidden');
+    }
+
+    function confirmDelete(id, name) {
+        document.getElementById('delete-Id').value = id;
+        document.getElementById('delete-category-name').innerText = name;
+        document.getElementById('deleteConfirmModal').classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteConfirmModal').classList.add('hidden');
+    }
+
+    // Auto-open modal if there are validation errors
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <text>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.location.href.indexOf('UpdateCategory') !== -1) {
+                document.getElementById('editCategoryModal').classList.remove('hidden');
+            } else {
+                openModal();
+            }
+        });
+        </text>
+    }
+</script>
+
+

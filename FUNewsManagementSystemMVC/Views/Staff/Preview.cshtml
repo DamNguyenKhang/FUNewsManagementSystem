@@ -1,0 +1,120 @@
+@model BusinessObject.Entities.NewsArticle
+@{
+    ViewData["Title"] = "Preview: " + Model.NewsTitle;
+    Layout = "~/Views/Shared/_StaffLayout.cshtml";
+    var mockMainImage = "https://lh3.googleusercontent.com/aida-public/AB6AXuB9igh-7F9vJxckJ-BVjEOunivJdY7DX_43WVDC6vBmOx5hO_TSbFnxlXi5WVmuYZCN6waNuljCbAT-S77UDZcNcn_RrhY5C9fJhRtLSxOuuialvT3bIgB1u75AFli6DJSXPyoO6vbrwcsoBUqRpmfp_Q1vEFm2jRiMZxoU-OUQuB4Q4w0cBXgWdceCbaM-YAEhfOyZmLhxXWNGI05R5e5RnFCEf3q_rVxZLfIpgpQdjUeEJrSDdQc7oQgyDAXXxd0QCUpmCkfvwgZv";
+}
+
+<header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0 z-10 sticky top-0">
+    <div class="flex items-center gap-2 text-sm">
+        <span class="text-text-secondary">Staff</span>
+        <span class="text-gray-300">/</span>
+        <span class="text-text-secondary">News Articles</span>
+        <span class="text-gray-300">/</span>
+        <span class="font-medium text-gray-900">Preview</span>
+    </div>
+    <div class="flex items-center gap-4">
+        <button type="button" onclick="history.back()" class="px-3 py-1.5 text-xs font-bold text-text-secondary hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-1">
+            <span class="material-symbols-outlined text-[18px]">close</span>
+            Close Preview
+        </button>
+    </div>
+</header>
+
+<div class="bg-gradient-to-b from-[#fcf9f8] to-white pb-12 pt-8">
+    <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+        @* Preview Banner *@
+        <div class="mb-8 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-3 text-amber-800">
+            <span class="material-symbols-outlined filled">visibility</span>
+            <span class="text-sm font-medium">This is a preview mode. The article is not yet saved.</span>
+        </div>
+
+        @* Main Content *@
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="p-8 md:p-12">
+                @if (Model.Category != null)
+                {
+                    <div class="mb-6">
+                        <span class="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary border border-primary/20">
+                            @Model.Category.CategoryName
+                        </span>
+                    </div>
+                }
+                
+                <h1 class="mb-8 text-3xl font-bold leading-tight text-gray-900 sm:text-4xl lg:text-5xl lg:leading-[1.15]">@Model.NewsTitle</h1>
+                
+                @* Author and Info Line *@
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-10 pb-6 border-b border-gray-100">
+                    <div class="flex items-center gap-6">
+                        <div class="flex items-center gap-3">
+                            <div class="h-10 w-10 rounded-full overflow-hidden bg-gray-200">
+                                <img src="https://ui-avatars.com/api/?name=@(Model.CreatedBy?.AccountName ?? "Author")&background=random" alt="Author" class="h-full w-full object-cover">
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-sm font-bold text-gray-900">@(Model.CreatedBy?.AccountName ?? "FPT Author")</span>
+                                <span class="text-xs text-text-secondary">University Press</span>
+                            </div>
+                        </div>
+                        <div class="h-4 w-px bg-gray-300"></div>
+                        <div class="flex items-center gap-2 text-sm text-text-secondary">
+                            <span class="material-symbols-outlined text-sm">calendar_today</span>
+                            <span>@(Model.CreatedDate?.ToString("MMM dd, yyyy") ?? "N/A")</span>
+                        </div>
+                    </div>
+                </div>
+
+                @* Featured Image *@
+                <div class="group relative mb-12 overflow-hidden rounded-2xl bg-gray-50 aspect-video flex items-center justify-center">
+                    @if (!string.IsNullOrEmpty(Model.NewsArticleImage))
+                    {
+                        <img alt="@Model.NewsTitle" class="w-full h-full object-cover" src="@Model.NewsArticleImage"/>
+                    }
+                    else
+                    {
+                        <div class="flex flex-col items-center text-gray-300">
+                            <span class="material-symbols-outlined text-6xl">image</span>
+                            <span class="text-sm mt-2">No Featured Image</span>
+                        </div>
+                    }
+                    <div class="absolute bottom-6 left-6 right-6 bg-black/40 backdrop-blur-md px-6 py-3 rounded-xl text-white text-sm font-medium">
+                        @(string.IsNullOrEmpty(Model.Headline) ? "News Preview" : Model.Headline)
+                    </div>
+                </div>
+
+                @* Content *@
+                <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed">
+                    <p class="text-xl font-light text-gray-600 leading-relaxed border-l-4 border-primary pl-6 italic mb-10">
+                        @Model.Headline
+                    </p>
+                    <div class="prose-headings:text-gray-900 prose-p:mb-6 prose-a:text-primary prose-a:font-semibold">
+                        @Html.Raw(Model.NewsContent)
+                    </div>
+                    
+                    @if (Model.Tags != null && Model.Tags.Any())
+                    {
+                        <div class="mt-16 pt-8 border-t border-gray-100 flex flex-wrap gap-2">
+                            @foreach (var tag in Model.Tags)
+                            {
+                                <span class="px-3 py-1.5 bg-gray-50 text-gray-600 text-sm font-medium rounded-lg border border-gray-100">#@tag.TagName</span>
+                            }
+                        </div>
+                    }
+                    
+                    @if (!string.IsNullOrEmpty(Model.NewsSource))
+                    {
+                        <div class="mt-12 p-4 bg-gray-50 rounded-xl text-sm text-text-secondary italic">
+                            Source: @Model.NewsSource
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        
+        @* Action Link for convenience *@
+        <div class="mt-10 flex justify-center">
+            <button onclick="history.back()" class="px-6 py-2.5 rounded-xl bg-white border border-gray-200 text-text-secondary font-bold hover:bg-gray-50 transition-all shadow-sm">
+                Return to Editor
+            </button>
+        </div>
+    </div>
+</div>

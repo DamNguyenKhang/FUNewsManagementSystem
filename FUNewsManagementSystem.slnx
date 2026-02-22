@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="BusinessObject/BusinessObject.csproj" />
+    <Project Path="DataAccessObject/DataAccessObject.csproj" />
+    <Project Path="FUNewsManagementSystemMVC/FUNewsManagementSystemMVC.csproj" />
+    <Project Path="Repositories/Repositories.csproj" />
+    <Project Path="Services/Services.csproj" />
+  </Folder>
+</Solution>

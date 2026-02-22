@@ -1,0 +1,375 @@
+@model IEnumerable<BusinessObject.Entities.SystemAccount>
+@{
+    ViewData["Title"] = "Accounts";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0 z-10">
+    <div class="flex items-center gap-2 text-sm">
+        <span class="text-text-secondary">Admin</span>
+        <span class="text-gray-300">/</span>
+        <span class="font-medium text-gray-900">Accounts</span>
+    </div>
+    <div class="flex items-center gap-4">
+        <span class="material-symbols-outlined text-gray-400">notifications</span>
+    </div>
+</header>
+
+<div class="flex-1 overflow-y-auto p-6 md:p-8 bg-background-light">
+    <div class="max-w-7xl mx-auto flex flex-col gap-8">
+        <!-- Header Section -->
+        <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div class="flex flex-col gap-2">
+                <h1 class="text-3xl font-bold tracking-tight text-text-main">Account Management</h1>
+                <p class="text-text-secondary">Manage system users, roles, and access permissions for the university portal.</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <button class="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium text-text-secondary shadow-sm hover:bg-gray-50 hover:text-text-main transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20">
+                    <span class="material-symbols-outlined text-[20px]">file_download</span>
+                    Export
+                </button>
+                <button onclick="openModal()" class="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-white shadow-md shadow-primary/20 hover:bg-primary-dark transition-all focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2">
+                    <span class="material-symbols-outlined text-[20px]">add</span>
+                    Create Account
+                </button>
+            </div>
+        </div>
+
+        <!-- Filters & Search -->
+        <form method="get" asp-action="Accounts" class="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:flex-row md:items-center md:justify-between">
+            <div class="relative w-full md:max-w-md">
+                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                    <span class="material-symbols-outlined text-gray-400">search</span>
+                </div>
+                <input type="text" name="search" value="@ViewBag.Search" class="block w-full rounded-lg border-gray-200 bg-gray-50 py-2.5 pl-10 pr-4 text-sm text-text-main placeholder-gray-400 focus:border-primary focus:bg-white focus:ring-primary transition-colors" placeholder="Search by name, email, or role..." onchange="this.form.submit()" />
+            </div>
+            <div class="flex items-center gap-3 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+                <div class="flex items-center gap-2 whitespace-nowrap">
+                    <span class="text-sm font-medium text-text-secondary">Role:</span>
+                    <select name="role" onchange="this.form.submit()" class="rounded-lg border-gray-200 bg-gray-50 py-2 pl-3 pr-8 text-sm text-text-main focus:border-primary focus:ring-primary cursor-pointer">
+                        <option value="">All Roles</option>
+                        <option value="1" selected="@(ViewBag.Role?.ToString() == "1")">Staff</option>
+                        <option value="2" selected="@(ViewBag.Role?.ToString() == "2")">Lecturer</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2 whitespace-nowrap">
+                    <span class="text-sm font-medium text-text-secondary">Status:</span>
+                    <select class="rounded-lg border-gray-200 bg-gray-50 py-2 pl-3 pr-8 text-sm text-text-main focus:border-primary focus:ring-primary cursor-pointer">
+                        <option>All Status</option>
+                        <option>Active</option>
+                        <option>Inactive</option>
+                    </select>
+                </div>
+                <button type="submit" class="hidden md:inline-flex h-10 items-center justify-center rounded-lg bg-gray-100 px-4 text-sm font-medium text-text-main hover:bg-gray-200 transition-colors">
+                    Search
+                </button>
+            </div>
+        </form>
+
+        <!-- Data Table -->
+        <div class="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-gray-50 text-xs uppercase text-text-secondary font-semibold">
+                        <tr>
+                            <th class="px-6 py-4" scope="col">User</th>
+                            <th class="px-6 py-4" scope="col">Role</th>
+                            <th class="px-6 py-4" scope="col">Status</th>
+                            <th class="px-6 py-4 text-right" scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 bg-white">
+                        @foreach (var account in Model)
+                        {
+                            <tr class="group hover:bg-orange-50/30 transition-colors">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        @{
+                                            var initials = "";
+                                            if (!string.IsNullOrEmpty(account.AccountName))
+                                            {
+                                                var parts = account.AccountName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                                                if (parts.Length > 0)
+                                                {
+                                                    initials = parts[0][0].ToString();
+                                                    if (parts.Length > 1) initials += parts[parts.Length - 1][0];
+                                                }
+                                            }
+                                            initials = initials.ToUpper();
+                                            
+                                            // Assign color class based on initials or ID
+                                            var bgColors = new[] { "bg-blue-100 text-blue-600", "bg-amber-100 text-amber-600", "bg-pink-100 text-pink-600", "bg-teal-100 text-teal-600", "bg-purple-100 text-purple-600" };
+                                            var colorClass = bgColors[account.Id % bgColors.Length];
+                                        }
+                                        <div class="h-10 w-10 flex-shrink-0 rounded-full @colorClass flex items-center justify-center font-bold">
+                                            @initials
+                                        </div>
+                                        <div class="flex flex-col">
+                                            <span class="font-medium text-text-main group-hover:text-primary transition-colors">@account.AccountName</span>
+                                            <span class="text-xs text-text-secondary">@account.AccountEmail</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    @if (account.AccountRole == BusinessObject.Enums.AccountRole.Staff)
+                                    {
+                                        <span class="inline-flex items-center rounded-md bg-purple-50 px-2 py-1 text-xs font-medium text-purple-700 ring-1 ring-inset ring-purple-700/10">
+                                            Staff
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
+                                            Lecturer
+                                        </span>
+                                    }
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-2">
+                                        <span class="relative flex h-2.5 w-2.5">
+                                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                                        </span>
+                                        <span class="text-text-main">Active</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button onclick="openEditModal('@account.Id', '@account.AccountName', '@account.AccountEmail', '@((int)account.AccountRole)')" class="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-blue-600 transition-colors" title="Edit">
+                                            <span class="material-symbols-outlined text-[20px]">edit</span>
+                                        </button>
+                                        <button onclick="confirmDelete('@account.Id', '@account.AccountName')" class="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-red-600 transition-colors" title="Delete">
+                                            <span class="material-symbols-outlined text-[20px]">delete</span>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination (Static for now to match prototype) -->
+            <div class="flex items-center justify-between border-t border-gray-200 bg-gray-50 px-4 py-3 sm:px-6">
+                <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-sm text-gray-700">
+                            Showing
+                            <span class="font-bold text-text-main">1</span>
+                            to
+                            <span class="font-bold text-text-main">@Model.Count()</span>
+                            of
+                            <span class="font-bold text-text-main">@Model.Count()</span>
+                            results
+                        </p>
+                    </div>
+                    <div>
+                        <nav aria-label="Pagination" class="isolate inline-flex -space-x-px rounded-md shadow-sm">
+                            <a class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0" href="#">
+                                <span class="sr-only">Previous</span>
+                                <span class="material-symbols-outlined text-[20px]">chevron_left</span>
+                            </a>
+                            <a aria-current="page" class="relative z-10 inline-flex items-center bg-primary px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="#">1</a>
+                            <a class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0" href="#">
+                                <span class="sr-only">Next</span>
+                                <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+                            </a>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Account Modal -->
+<div id="createAccountModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closeModal()"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-primary/10 sm:mx-0 sm:h-10 sm:w-10">
+                        <span class="material-symbols-outlined text-primary">person_add</span>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Create New Account</h3>
+                        <div class="mt-2">
+                            <form id="createAccountForm" method="post" asp-action="CreateAccount" asp-controller="Admin">
+                                <div class="space-y-4">
+                                    <div asp-validation-summary="All" class="text-xs text-red-600"></div>
+                                    <div>
+                                        <label for="AccountName" class="block text-sm font-medium text-gray-700">Full Name</label>
+                                        <input type="text" name="AccountName" id="AccountName" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                                    </div>
+                                    <div>
+                                        <label for="AccountEmail" class="block text-sm font-medium text-gray-700">Email</label>
+                                        <input type="email" name="AccountEmail" id="AccountEmail" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                                    </div>
+                                    <div>
+                                        <label for="AccountPassword" class="block text-sm font-medium text-gray-700">Password</label>
+                                        <input type="password" name="AccountPassword" id="AccountPassword" required minlength="6" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                                    </div>
+                                    <div>
+                                        <label for="AccountRole" class="block text-sm font-medium text-gray-700">Role</label>
+                                        <select name="AccountRole" id="AccountRole" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                                            <option value="1">Staff</option>
+                                            <option value="2">Lecturer</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                                    <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm">
+                                        Create
+                                    </button>
+                                    <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:w-auto sm:text-sm" onclick="closeModal()">
+                                        Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Account Modal -->
+<div id="editAccountModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closeEditModal()"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <span class="material-symbols-outlined text-blue-600">edit</span>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Edit Account</h3>
+                        <div class="mt-2">
+                            <form id="editAccountForm" method="post" asp-action="UpdateAccount" asp-controller="Admin">
+                                <input type="hidden" name="Id" id="edit-Id">
+                                <div class="space-y-4">
+                                    <div asp-validation-summary="All" class="text-xs text-red-600"></div>
+                                    <div>
+                                        <label for="edit-AccountName" class="block text-sm font-medium text-gray-700">Full Name</label>
+                                        <input type="text" name="AccountName" id="edit-AccountName" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                                    </div>
+                                    <div>
+                                        <label for="edit-AccountEmail" class="block text-sm font-medium text-gray-700">Email</label>
+                                        <input type="email" name="AccountEmail" id="edit-AccountEmail" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                                    </div>
+                                    <div>
+                                        <label for="edit-AccountPassword" class="block text-sm font-medium text-gray-700">Password (Leave blank to keep current)</label>
+                                        <input type="password" name="AccountPassword" id="edit-AccountPassword" minlength="6" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm" placeholder="••••••••">
+                                    </div>
+                                    <div>
+                                        <label for="edit-AccountRole" class="block text-sm font-medium text-gray-700">Role</label>
+                                        <select name="AccountRole" id="edit-AccountRole" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                                            <option value="1">Staff</option>
+                                            <option value="2">Lecturer</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                                    <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm">
+                                        Save Changes
+                                    </button>
+                                    <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:w-auto sm:text-sm" onclick="closeEditModal()">
+                                        Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteConfirmModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closeDeleteModal()"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <span class="material-symbols-outlined text-red-600">warning</span>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Delete Account</h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-gray-500">Are you sure you want to delete <span id="delete-account-name" class="font-bold"></span>? This action cannot be undone.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <form method="post" asp-action="DeleteAccount" asp-controller="Admin">
+                    <input type="hidden" name="id" id="delete-Id">
+                    <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        Delete
+                    </button>
+                </form>
+                <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" onclick="closeDeleteModal()">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openModal() {
+        document.getElementById('createAccountModal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+        document.getElementById('createAccountModal').classList.add('hidden');
+    }
+
+    function openEditModal(id, name, email, role) {
+        document.getElementById('edit-Id').value = id;
+        document.getElementById('edit-AccountName').value = name;
+        document.getElementById('edit-AccountEmail').value = email;
+        document.getElementById('edit-AccountRole').value = role;
+        document.getElementById('editAccountModal').classList.remove('hidden');
+    }
+
+    function closeEditModal() {
+        document.getElementById('editAccountModal').classList.add('hidden');
+    }
+
+    function confirmDelete(id, name) {
+        document.getElementById('delete-Id').value = id;
+        document.getElementById('delete-account-name').innerText = name;
+        document.getElementById('deleteConfirmModal').classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteConfirmModal').classList.add('hidden');
+    }
+
+    // Auto-open modal if there are validation errors
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <text>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if it was a create or edit error based on the hidden ID field in one of them
+            // This is a bit hacky for simple MVC, ideally use separate partials or AJAX
+            // If the URL contains "Update", it was an edit error
+            if (window.location.href.indexOf('UpdateAccount') !== -1) {
+                document.getElementById('editAccountModal').classList.remove('hidden');
+            } else {
+                openModal();
+            }
+        });
+        </text>
+    }
+</script>
