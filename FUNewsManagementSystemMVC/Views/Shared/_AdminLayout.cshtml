@@ -68,13 +68,17 @@
                         <span class="material-symbols-outlined @(ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "filled" : "text-gray-400 group-hover:text-primary") transition-colors">dashboard</span>
                         <span class="text-sm font-medium @(ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "font-semibold" : "")">Dashboard</span>
                     </a>
-                    <a href="#" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-text-secondary hover:bg-gray-50 hover:text-primary transition-colors group">
-                        <span class="material-symbols-outlined text-gray-400 group-hover:text-primary transition-colors">newspaper</span>
-                        <span class="text-sm font-medium">News Management</span>
+                    <a asp-controller="Admin" asp-action="News" class="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors group @(ViewContext.RouteData.Values["Action"].ToString() == "News" ? "bg-primary/10 text-primary" : "text-text-secondary hover:bg-gray-50 hover:text-primary")">
+                        <span class="material-symbols-outlined @(ViewContext.RouteData.Values["Action"].ToString() == "News" ? "filled" : "text-gray-400 group-hover:text-primary") transition-colors">newspaper</span>
+                        <span class="text-sm font-medium @(ViewContext.RouteData.Values["Action"].ToString() == "News" ? "font-semibold" : "")">News Management</span>
                     </a>
                     <a asp-controller="Admin" asp-action="Accounts" class="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors group @(ViewContext.RouteData.Values["Action"].ToString() == "Accounts" ? "bg-primary/10 text-primary" : "text-text-secondary hover:bg-gray-50 hover:text-primary")">
                         <span class="material-symbols-outlined @(ViewContext.RouteData.Values["Action"].ToString() == "Accounts" ? "filled" : "text-gray-400 group-hover:text-primary") transition-colors">group</span>
                         <span class="text-sm font-medium @(ViewContext.RouteData.Values["Action"].ToString() == "Accounts" ? "font-semibold" : "")">Account Management</span>
+                    </a>
+                    <a asp-controller="Admin" asp-action="Categories" class="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors group @(ViewContext.RouteData.Values["Action"].ToString() == "Categories" ? "bg-primary/10 text-primary" : "text-text-secondary hover:bg-gray-50 hover:text-primary")">
+                        <span class="material-symbols-outlined @(ViewContext.RouteData.Values["Action"].ToString() == "Categories" ? "filled" : "text-gray-400 group-hover:text-primary") transition-colors">category</span>
+                        <span class="text-sm font-medium @(ViewContext.RouteData.Values["Action"].ToString() == "Categories" ? "font-semibold" : "")">Category Management</span>
                     </a>
                     <a asp-controller="Admin" asp-action="Reports" class="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors group @(ViewContext.RouteData.Values["Action"].ToString() == "Reports" ? "bg-primary/10 text-primary" : "text-text-secondary hover:bg-gray-50 hover:text-primary")">
                         <span class="material-symbols-outlined @(ViewContext.RouteData.Values["Action"].ToString() == "Reports" ? "filled" : "text-gray-400 group-hover:text-primary") transition-colors">analytics</span>

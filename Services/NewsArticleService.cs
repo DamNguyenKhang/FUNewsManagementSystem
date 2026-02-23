@@ -28,14 +28,14 @@ namespace Services
             _fileStorageService = fileStorageService;
         }
 
-        public async Task<List<NewsArticle>> GetAllNews(string? search = null, short? categoryId = null, bool? status = null, short? createdById = null, DateTime? startDate = null, DateTime? endDate = null, int? pageIndex = null, int? pageSize = null)
+        public async Task<List<NewsArticle>> GetAllNews(string? search = null, short? categoryId = null, bool? status = null, short? createdById = null, DateTime? startDate = null, DateTime? endDate = null, int? tagId = null, int? pageIndex = null, int? pageSize = null)
         {
-            return await _newsArticleRepository.GetAllAsync(keyword: search, categoryId: categoryId, newsStatus: status, createdById: createdById, startDate: startDate, endDate: endDate, pageIndex: pageIndex, pageSize: pageSize);
+            return await _newsArticleRepository.GetAllAsync(keyword: search, categoryId: categoryId, newsStatus: status, createdById: createdById, startDate: startDate, endDate: endDate, tagId: tagId, pageIndex: pageIndex, pageSize: pageSize);
         }
 
-        public async Task<int> GetNewsCount(string? search = null, short? categoryId = null, bool? status = null, short? createdById = null, DateTime? startDate = null, DateTime? endDate = null)
+        public async Task<int> GetNewsCount(string? search = null, short? categoryId = null, bool? status = null, short? createdById = null, DateTime? startDate = null, DateTime? endDate = null, int? tagId = null)
         {
-            return await _newsArticleRepository.CountAsync(keyword: search, categoryId: categoryId, newsStatus: status, createdById: createdById, startDate: startDate, endDate: endDate);
+            return await _newsArticleRepository.CountAsync(keyword: search, categoryId: categoryId, newsStatus: status, createdById: createdById, startDate: startDate, endDate: endDate, tagId: tagId);
         }
 
         public async Task<NewsArticle?> GetNewsById(string id)

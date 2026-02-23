@@ -1,0 +1,253 @@
+@model IEnumerable<BusinessObject.Entities.NewsArticle>
+@{
+    ViewData["Title"] = "Manage News";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var categories = ViewBag.Categories as IEnumerable<BusinessObject.Entities.Category>;
+}
+
+<header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0 z-10">
+    <div class="flex items-center gap-2 text-sm">
+        <span class="text-text-secondary">Admin</span>
+        <span class="text-gray-300">/</span>
+        <span class="font-medium text-gray-900">Manage News</span>
+    </div>
+    <div class="flex items-center gap-4">
+        <span class="material-symbols-outlined text-gray-400">notifications</span>
+    </div>
+</header>
+
+<div class="flex-1 overflow-y-auto p-6 md:p-8 bg-background-light">
+    <div class="max-w-7xl mx-auto flex flex-col gap-8">
+        <!-- Alerts -->
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="rounded-xl border border-green-100 bg-green-50 p-4 shadow-sm">
+                <div class="flex items-center gap-3 text-green-700">
+                    <span class="material-symbols-outlined text-[20px]">check_circle</span>
+                    <p class="text-sm font-bold">@TempData["SuccessMessage"]</p>
+                </div>
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="rounded-xl border border-red-100 bg-red-50 p-4 shadow-sm">
+                <div class="flex items-center gap-3 text-red-700">
+                    <span class="material-symbols-outlined text-[20px]">error</span>
+                    <p class="text-sm font-bold">@TempData["ErrorMessage"]</p>
+                </div>
+            </div>
+        }
+        <!-- Header Section -->
+        <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div class="flex flex-col gap-2">
+                <h1 class="text-3xl font-bold tracking-tight text-text-main">Manage News</h1>
+                <p class="text-text-secondary">Manage and oversee all news articles in the system.</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <button class="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium text-text-secondary shadow-sm hover:bg-gray-50 hover:text-text-main transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">file_download</span>
+                    Export
+                </button>
+                <a asp-action="CreateNews" class="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-white shadow-md shadow-primary/20 hover:bg-primary-dark transition-all">
+                    <span class="material-symbols-outlined text-[20px]">add_circle</span>
+                    Create News
+                </a>
+            </div>
+        </div>
+
+        <!-- Filters & Search -->
+        <form method="get" asp-action="News" class="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:flex-row md:items-center md:justify-between">
+            <div class="relative w-full md:max-w-md">
+                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                    <span class="material-symbols-outlined text-gray-400">search</span>
+                </div>
+                <input type="text" name="search" value="@ViewBag.Search" onchange="this.form.submit()" class="block w-full rounded-lg border-gray-200 bg-gray-50 py-2.5 pl-10 pr-4 text-sm text-text-main placeholder-gray-400 focus:border-primary focus:bg-white focus:ring-primary transition-colors" placeholder="Search articles by title or content..." />
+            </div>
+            <div class="flex items-center gap-3 w-full md:w-auto overflow-x-auto">
+                <div class="flex items-center gap-2 whitespace-nowrap">
+                    <span class="text-sm font-medium text-text-secondary">Category:</span>
+                    <select name="categoryId" onchange="this.form.submit()" class="rounded-lg border-gray-200 bg-gray-50 py-2 pl-3 pr-8 text-sm text-text-main focus:border-primary focus:ring-primary cursor-pointer">
+                        <option value="">All Categories</option>
+                        @if (categories != null)
+                        {
+                            foreach (var cat in categories)
+                            {
+                                <option value="@cat.Id" selected="@(ViewBag.CategoryId == cat.Id)">@cat.CategoryName</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="flex items-center gap-2 whitespace-nowrap">
+                    <span class="text-sm font-medium text-text-secondary">Status:</span>
+                    <select name="status" onchange="this.form.submit()" class="rounded-lg border-gray-200 bg-gray-50 py-2 pl-3 pr-8 text-sm text-text-main focus:border-primary focus:ring-primary cursor-pointer">
+                        <option value="">All Status</option>
+                        <option value="true" selected="@(ViewBag.Status == true)">Published</option>
+                        <option value="false" selected="@(ViewBag.Status == false)">Draft</option>
+                    </select>
+                </div>
+            </div>
+        </form>
+
+        <!-- Data Table -->
+        <div class="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-gray-50 text-xs uppercase text-text-secondary font-semibold">
+                        <tr>
+                            <th class="px-6 py-4" scope="col">Article</th>
+                            <th class="px-6 py-4" scope="col">Category</th>
+                            <th class="px-6 py-4" scope="col">Created Date</th>
+                            <th class="px-6 py-4" scope="col">Status</th>
+                            <th class="px-6 py-4 text-right" scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 bg-white">
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var item in Model)
+                            {
+                                <tr class="group hover:bg-orange-50/30 transition-colors">
+                                    <td class="px-6 py-4">
+                                        <div class="flex flex-col">
+                                            <span class="font-bold text-text-main group-hover:text-primary transition-colors">@item.NewsTitle</span>
+                                            <span class="text-xs text-text-secondary">By @(item.CreatedBy?.AccountName ?? "Unknown")</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center rounded-md bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">@item.Category?.CategoryName</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-text-secondary font-medium">
+                                        @(item.CreatedDate?.ToString("MMM dd, yyyy") ?? "N/A")
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-2">
+                                            @if (item.NewsStatus == true)
+                                            {
+                                                <span class="relative flex h-2 w-2">
+                                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                                </span>
+                                                <span class="text-text-main font-medium">Published</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="relative flex h-2 w-2">
+                                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
+                                                </span>
+                                                <span class="text-text-main font-medium">Draft</span>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-right">
+                                        <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <a asp-action="EditNews" asp-route-id="@item.Id" class="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-blue-600 transition-colors" title="Edit">
+                                                <span class="material-symbols-outlined text-[20px]">edit</span>
+                                            </a>
+                                            <button onclick="confirmDelete('@item.Id', '@item.NewsTitle.Replace("'", "\\'")')" class="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-red-600 transition-colors" title="Delete">
+                                                <span class="material-symbols-outlined text-[20px]">delete</span>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" class="px-6 py-12 text-center text-text-secondary italic bg-gray-50/50">
+                                    No news articles found matching your criteria.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="flex items-center justify-between border-t border-gray-200 bg-gray-50 px-4 py-3 sm:px-6">
+                <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-sm text-gray-700">
+                            Showing <span class="font-bold">@((ViewBag.CurrentPage - 1) * 10 + 1)</span> to 
+                            <span class="font-bold">@(System.Math.Min(ViewBag.CurrentPage * 10, ViewBag.TotalItems))</span> of 
+                            <span class="font-bold">@ViewBag.TotalItems</span> results
+                        </p>
+                    </div>
+                    <div>
+                        <nav aria-label="Pagination" class="isolate inline-flex -space-x-px rounded-md shadow-sm">
+                            @if (ViewBag.CurrentPage > 1)
+                            {
+                                <a asp-action="News" asp-route-page="@(ViewBag.CurrentPage - 1)" asp-route-search="@ViewBag.Search" asp-route-categoryId="@ViewBag.CategoryId" asp-route-status="@ViewBag.Status" class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
+                                    <span class="material-symbols-outlined text-[20px]">chevron_left</span>
+                                </a>
+                            }
+
+                            @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                            {
+                                if (i == ViewBag.CurrentPage)
+                                {
+                                    <a aria-current="page" class="relative z-10 inline-flex items-center bg-primary px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="#">@i</a>
+                                }
+                                else
+                                {
+                                    <a asp-action="News" asp-route-page="@i" asp-route-search="@ViewBag.Search" asp-route-categoryId="@ViewBag.CategoryId" asp-route-status="@ViewBag.Status" class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">@i</a>
+                                }
+                            }
+
+                            @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                            {
+                                <a asp-action="News" asp-route-page="@(ViewBag.CurrentPage + 1)" asp-route-search="@ViewBag.Search" asp-route-categoryId="@ViewBag.CategoryId" asp-route-status="@ViewBag.Status" class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
+                                    <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+                                </a>
+                            }
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closeDeleteModal()"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <span class="material-symbols-outlined text-red-600">delete</span>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Delete News Article</h3>
+                        <div class="mt-2 text-left">
+                            <p class="text-sm text-gray-500">Are you sure you want to delete "<span id="delete-item-title" class="font-bold"></span>"? This action cannot be undone.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <form id="delete-form" method="post">
+                    <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm font-bold">
+                        Delete
+                    </button>
+                </form>
+                <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:w-auto sm:text-sm" onclick="closeDeleteModal()">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function confirmDelete(id, title) {
+        document.getElementById('delete-item-title').innerText = title;
+        document.getElementById('delete-form').action = '/Admin/DeleteNews/' + id;
+        document.getElementById('deleteModal').classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.add('hidden');
+    }
+</script>

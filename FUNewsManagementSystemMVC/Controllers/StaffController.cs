@@ -35,8 +35,26 @@ namespace FUNewsManagementSystemMVC.Controllers
             _mapper = mapper;
         }
 
-        public IActionResult Dashboard()
+        public async Task<IActionResult> Dashboard()
         {
+            var accountIdStr = HttpContext.Session.GetString("AccountId");
+            short? accountId = null;
+            if (short.TryParse(accountIdStr, out short id))
+            {
+                accountId = id;
+            }
+
+            // News stats (specific to staff)
+            ViewBag.TotalNews = await _newsArticleService.GetNewsCount(createdById: accountId);
+            ViewBag.PublishedNews = await _newsArticleService.GetNewsCount(createdById: accountId, status: true);
+            
+            // Global stats
+            var categories = await _categoryService.GetAllCategories();
+            ViewBag.TotalCategories = categories.Count;
+            
+            var tags = await _tagService.GetAllTags();
+            ViewBag.TotalTags = tags.Count;
+
             return View();
         }
 
@@ -45,6 +63,7 @@ namespace FUNewsManagementSystemMVC.Controllers
             var categories = await _categoryService.GetAllCategories(isActive, search);
             ViewBag.Search = search;
             ViewBag.IsActive = isActive;
+            ViewBag.CategoriesForParent = await _categoryService.GetAllCategories(true);
             return View(categories);
         }
 
@@ -59,6 +78,7 @@ namespace FUNewsManagementSystemMVC.Controllers
                 return RedirectToAction(nameof(Categories));
             }
             var categories = await _categoryService.GetAllCategories();
+            ViewBag.CategoriesForParent = await _categoryService.GetAllCategories(true);
             return View("Categories", categories);
         }
 
@@ -178,46 +198,6 @@ namespace FUNewsManagementSystemMVC.Controllers
             return RedirectToAction(nameof(News));
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Preview(PreviewNewsViewModel model)
-        {
-            var article = new NewsArticle
-            {
-                NewsTitle = model.NewsTitle,
-                Headline = model.Headline,
-                NewsContent = model.NewsContent,
-                NewsSource = model.NewsSource,
-                NewsArticleImage = model.NewsArticleImage,
-                CreatedDate = DateTime.Now
-            };
-
-            if (model.CategoryId > 0)
-            {
-                article.Category = await _categoryService.GetCategoryById(model.CategoryId);
-            }
-
-            if (model.TagIds != null && model.TagIds.Any())
-            {
-                var allTags = await _tagService.GetAllTags();
-                article.Tags = allTags.Where(t => model.TagIds.Contains(t.Id)).ToList();
-            }
-
-            article.CreatedBy = new SystemAccount
-            {
-                AccountName = HttpContext.Session.GetString("AccountName") ?? "Staff Member"
-            };
-
-            if (model.ImageFile != null && model.ImageFile.Length > 0)
-            {
-                using var ms = new System.IO.MemoryStream();
-                await model.ImageFile.CopyToAsync(ms);
-                var fileBytes = ms.ToArray();
-                string s = Convert.ToBase64String(fileBytes);
-                article.NewsArticleImage = "data:" + model.ImageFile.ContentType + ";base64," + s;
-            }
-
-            return View(article);
-        }
 
         [HttpPost]
         public async Task<IActionResult> CreateTag([FromBody] CreateTagViewModel model)

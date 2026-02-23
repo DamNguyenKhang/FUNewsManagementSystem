@@ -11,7 +11,7 @@ namespace Repositories
         {
         }
 
-        public async Task<List<NewsArticle>> GetAllAsync(string? keyword = null, short? categoryId = null, bool? newsStatus = null, short? createdById = null, DateTime? startDate = null, DateTime? endDate = null, int? pageIndex = null, int? pageSize = null)
+        public async Task<List<NewsArticle>> GetAllAsync(string? keyword = null, short? categoryId = null, bool? newsStatus = null, short? createdById = null, DateTime? startDate = null, DateTime? endDate = null, int? tagId = null, int? pageIndex = null, int? pageSize = null)
         {
             var query = _context.NewsArticles
                 .Include(x => x.Category)
@@ -49,6 +49,11 @@ namespace Repositories
                 query = query.Where(x => x.CreatedDate <= endDate.Value);
             }
 
+            if (tagId.HasValue)
+            {
+                query = query.Where(x => x.Tags.Any(t => t.Id == tagId.Value));
+            }
+
             query = query.OrderByDescending(x => x.CreatedDate);
 
             if (pageIndex.HasValue && pageSize.HasValue)
@@ -59,7 +64,7 @@ namespace Repositories
             return await query.ToListAsync();
         }
 
-        public async Task<int> CountAsync(string? keyword = null, short? categoryId = null, bool? newsStatus = null, short? createdById = null, DateTime? startDate = null, DateTime? endDate = null)
+        public async Task<int> CountAsync(string? keyword = null, short? categoryId = null, bool? newsStatus = null, short? createdById = null, DateTime? startDate = null, DateTime? endDate = null, int? tagId = null)
         {
             var query = _context.NewsArticles.AsQueryable();
 
@@ -91,6 +96,11 @@ namespace Repositories
             if (endDate.HasValue)
             {
                 query = query.Where(x => x.CreatedDate <= endDate.Value);
+            }
+
+            if (tagId.HasValue)
+            {
+                query = query.Where(x => x.Tags.Any(t => t.Id == tagId.Value));
             }
 
             return await query.CountAsync();

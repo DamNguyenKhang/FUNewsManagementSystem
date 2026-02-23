@@ -1,9 +1,14 @@
 @{
     ViewData["Title"] = "Dashboard";
     Layout = "~/Views/Shared/_StaffLayout.cshtml";
+    
+    var totalNews = ViewBag.TotalNews ?? 0;
+    var publishedNews = ViewBag.PublishedNews ?? 0;
+    var totalCategories = ViewBag.TotalCategories ?? 0;
+    var totalTags = ViewBag.TotalTags ?? 0;
 }
 
-<header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0 z-10">
+<header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0 z-10 sticky top-0">
     <div class="flex items-center gap-2 text-sm">
         <span class="text-text-secondary">Staff</span>
         <span class="text-gray-300">/</span>
@@ -17,78 +22,107 @@
 <div class="flex-1 overflow-y-auto p-6 md:p-8 bg-background-light">
     <div class="max-w-7xl mx-auto space-y-8">
         <div class="flex flex-col gap-2">
-            <h1 class="text-3xl font-bold tracking-tight text-text-main">Welcome back, Staff</h1>
-            <p class="text-text-secondary">Manage university news, categories, and review your activity from your central cockpit.</p>
+            <h1 class="text-3xl font-bold tracking-tight text-text-main font-display">Staff Console</h1>
+            <p class="text-text-secondary">Track your news contributions and system statistics at a glance.</p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <a asp-controller="Staff" asp-action="News" class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all flex items-start justify-between group">
+            @* My News Card *@
+            <a asp-controller="Staff" asp-action="News" class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all flex items-start justify-between group">
                 <div>
-                    <p class="text-sm font-medium text-text-secondary">Manage News</p>
-                    <h3 class="text-xl font-bold text-gray-900 mt-2">Create & Edit</h3>
+                    <p class="text-sm font-medium text-text-secondary">My News</p>
+                    <h3 class="text-3xl font-bold text-text-main mt-2">@string.Format("{0:N0}", totalNews)</h3>
+                    <div class="flex items-center gap-1 mt-3">
+                        <span class="text-[11px] text-text-secondary">Total articles created</span>
+                    </div>
                 </div>
-                <div class="h-12 w-12 rounded-lg bg-orange-50 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
-                    <span class="material-symbols-outlined text-2xl">newspaper</span>
+                <div class="h-12 w-12 rounded-xl bg-orange-50 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+                    <span class="material-symbols-outlined text-2xl filled">newspaper</span>
                 </div>
             </a>
-            <a asp-controller="Staff" asp-action="Categories" class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all flex items-start justify-between group">
+
+            @* Published News Card *@
+            <a asp-controller="Staff" asp-action="News" asp-route-status="true" class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all flex items-start justify-between group">
+                <div>
+                    <p class="text-sm font-medium text-text-secondary">New Publish</p>
+                    <h3 class="text-3xl font-bold text-text-main mt-2">@string.Format("{0:N0}", publishedNews)</h3>
+                    <div class="flex items-center gap-1 mt-3 text-green-600">
+                        <span class="material-symbols-outlined text-[14px]">check_circle</span>
+                        <span class="text-[11px] font-bold uppercase">Live on site</span>
+                    </div>
+                </div>
+                <div class="h-12 w-12 rounded-xl bg-green-50 text-green-600 flex items-center justify-center group-hover:bg-green-600 group-hover:text-white transition-colors">
+                    <span class="material-symbols-outlined text-2xl filled">publish</span>
+                </div>
+            </a>
+
+            @* Categories Card *@
+            <a asp-controller="Staff" asp-action="Categories" class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all flex items-start justify-between group">
                 <div>
                     <p class="text-sm font-medium text-text-secondary">Categories</p>
-                    <h3 class="text-xl font-bold text-gray-900 mt-2">Organize</h3>
+                    <h3 class="text-3xl font-bold text-text-main mt-2">@string.Format("{0:N0}", totalCategories)</h3>
+                    <div class="flex items-center gap-1 mt-3">
+                        <span class="text-[11px] text-text-secondary">System categories</span>
+                    </div>
                 </div>
-                <div class="h-12 w-12 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                    <span class="material-symbols-outlined text-2xl">folder</span>
+                <div class="h-12 w-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                    <span class="material-symbols-outlined text-2xl filled">category</span>
                 </div>
             </a>
-            <a asp-controller="Staff" asp-action="History" class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all flex items-start justify-between group">
+
+            @* Tags Card *@
+            <a href="#" class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all flex items-start justify-between group cursor-default">
                 <div>
-                    <p class="text-sm font-medium text-text-secondary">Activity</p>
-                    <h3 class="text-xl font-bold text-gray-900 mt-2">History</h3>
+                    <p class="text-sm font-medium text-text-secondary">Hashtags</p>
+                    <h3 class="text-3xl font-bold text-text-main mt-2">@string.Format("{0:N0}", totalTags)</h3>
+                    <div class="flex items-center gap-1 mt-3">
+                        <span class="text-[11px] text-text-secondary">Unique system tags</span>
+                    </div>
                 </div>
-                <div class="h-12 w-12 rounded-lg bg-green-50 text-green-600 flex items-center justify-center group-hover:bg-green-600 group-hover:text-white transition-colors">
-                    <span class="material-symbols-outlined text-2xl">history</span>
+                <div class="h-12 w-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                    <span class="material-symbols-outlined text-2xl filled">tag</span>
                 </div>
             </a>
         </div>
 
-        @* Recent Activity *@
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
             <div class="p-6 border-b border-gray-100 flex items-center justify-between">
-                <h3 class="text-lg font-bold text-gray-900">Recent Activity</h3>
-                <span class="text-sm text-primary font-medium cursor-pointer hover:underline">View all</span>
+                <h3 class="text-lg font-bold text-text-main">Your Recent Contributions</h3>
+                <a asp-action="History" class="text-xs font-bold text-primary hover:text-primary-dark transition-colors">View All</a>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm text-text-secondary border-collapse">
-                    <thead class="bg-gray-50 text-xs uppercase font-semibold text-gray-500">
+                    <thead class="bg-gray-50 text-xs uppercase font-bold text-gray-500">
                         <tr>
-                            <th class="px-6 py-4 font-semibold">Action</th>
-                            <th class="px-6 py-4 font-semibold">Document Title</th>
+                            <th class="px-6 py-4 font-semibold">Activity</th>
+                            <th class="px-6 py-4 font-semibold">Article Title</th>
                             <th class="px-6 py-4 font-semibold text-right">Status</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
-                        <tr>
+                        <tr class="hover:bg-gray-50/50 transition-colors">
                             <td class="px-6 py-4 flex items-center gap-3">
                                 <div class="size-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
                                     <span class="material-symbols-outlined text-lg">edit</span>
                                 </div>
-                                <span class="font-medium text-gray-900">Edited Article</span>
+                                <span class="font-bold text-text-main">Draft Save</span>
                             </td>
                             <td class="px-6 py-4">The Future of AI in Education</td>
                             <td class="px-6 py-4 text-right">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Draft</span>
+                                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-100">Draft</span>
                             </td>
                         </tr>
-                        <tr>
+                        <tr class="hover:bg-gray-50/50 transition-colors">
                             <td class="px-6 py-4 flex items-center gap-3">
                                 <div class="size-8 rounded-full bg-green-50 text-green-600 flex items-center justify-center">
                                     <span class="material-symbols-outlined text-lg">publish</span>
                                 </div>
-                                <span class="font-medium text-gray-900">Published Article</span>
+                                <span class="font-bold text-text-main">Published</span>
                             </td>
                             <td class="px-6 py-4">Fall Semester Registration</td>
                             <td class="px-6 py-4 text-right">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Published</span>
+                                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-100">Live</span>
                             </td>
                         </tr>
                     </tbody>
@@ -97,4 +131,3 @@
         </div>
     </div>
 </div>
-

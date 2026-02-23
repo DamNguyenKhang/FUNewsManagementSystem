@@ -18,6 +18,7 @@
     </div>
     <form method="get" asp-action="Index" class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col lg:flex-row gap-4 items-center justify-between">
         <input type="hidden" name="categoryId" value="@ViewBag.CategoryId" />
+        <input type="hidden" name="tagId" value="@ViewBag.TagId" />
         <div class="relative w-full lg:w-96 group">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-primary transition-colors">
                 <span class="material-symbols-outlined">search</span>
@@ -26,7 +27,7 @@
         </div>
         <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
             <a asp-action="Index" asp-route-search="@ViewBag.Search" 
-               class="whitespace-nowrap px-4 py-2 rounded-lg font-medium text-sm transition-all @(ViewBag.CategoryId == null ? "bg-primary text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900")">
+               class="whitespace-nowrap px-4 py-2 rounded-lg font-medium text-sm transition-all @(ViewBag.CategoryId == null && ViewBag.TagId == null ? "bg-primary text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900")">
                 All News
             </a>
             @if (ViewBag.Categories != null)
@@ -40,6 +41,19 @@
                 }
             }
         </div>
+        @if (ViewBag.ActiveTag != null)
+        {
+            var activeTagName = "#" + ((BusinessObject.Entities.Tag)ViewBag.ActiveTag).TagName;
+            var cleanSearchForClose = (ViewBag.Search as string)?.Replace(activeTagName, "").Trim();
+            
+            <div class="flex items-center gap-2 px-3 py-1.5 bg-primary/5 border border-primary/10 rounded-lg">
+                <span class="material-symbols-outlined text-[18px] text-primary">tag</span>
+                <span class="text-sm font-bold text-gray-900">@activeTagName</span>
+                <a asp-action="Index" asp-route-search="@cleanSearchForClose" asp-route-categoryId="@ViewBag.CategoryId" class="ml-1 text-gray-400 hover:text-red-500 transition-colors">
+                    <span class="material-symbols-outlined text-[18px]">close</span>
+                </a>
+            </div>
+        }
     </form>
 </div>
 

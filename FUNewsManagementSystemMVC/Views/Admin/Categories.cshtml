@@ -1,13 +1,13 @@
 @model IEnumerable<BusinessObject.Entities.Category>
 @{
     ViewData["Title"] = "Categories";
-    Layout = "~/Views/Shared/_StaffLayout.cshtml";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
     var categoriesForParent = ViewBag.CategoriesForParent as IEnumerable<BusinessObject.Entities.Category>;
 }
 
 <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0 z-10">
     <div class="flex items-center gap-2 text-sm">
-        <span class="text-text-secondary">Staff</span>
+        <span class="text-text-secondary">Admin</span>
         <span class="text-gray-300">/</span>
         <span class="font-medium text-gray-900">Categories</span>
     </div>
@@ -160,7 +160,7 @@
                     <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
                         <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Create New Category</h3>
                         <div class="mt-2 text-left">
-                            <form id="createCategoryForm" method="post" asp-action="CreateCategory" asp-controller="Staff">
+                            <form id="createCategoryForm" method="post" asp-action="CreateCategory" asp-controller="Admin">
                                 <div class="space-y-4">
                                     <div asp-validation-summary="All" class="text-xs text-red-600"></div>
                                     <div>
@@ -221,7 +221,7 @@
                     <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
                         <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Edit Category</h3>
                         <div class="mt-2 text-left">
-                            <form id="editCategoryForm" method="post" asp-action="UpdateCategory" asp-controller="Staff">
+                            <form id="editCategoryForm" method="post" asp-action="UpdateCategory" asp-controller="Admin">
                                 <input type="hidden" name="Id" id="edit-Id">
                                 <div class="space-y-4">
                                     <div asp-validation-summary="All" class="text-xs text-red-600"></div>
@@ -289,7 +289,7 @@
                 </div>
             </div>
             <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <form method="post" asp-action="DeleteCategory" asp-controller="Staff">
+                <form method="post" asp-action="DeleteCategory" asp-controller="Admin">
                     <input type="hidden" name="id" id="delete-Id">
                     <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm font-bold">
                         Delete

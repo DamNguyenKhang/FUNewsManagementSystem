@@ -79,7 +79,7 @@
                         <div class="mt-12 pt-8 border-t border-gray-100 flex flex-wrap gap-2">
                             @foreach (var tag in Model.Tags)
                             {
-                                <span class="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-primary/10 hover:text-primary transition-colors cursor-pointer">#@tag.TagName</span>
+                                <a asp-action="Index" asp-route-tagId="@tag.Id" class="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-primary/10 hover:text-primary transition-colors cursor-pointer inline-block">#@tag.TagName</a>
                             }
                         </div>
                     }

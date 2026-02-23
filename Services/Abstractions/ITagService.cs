@@ -9,5 +9,6 @@ namespace Services.Abstractions
         Task<List<Tag>> GetAllTags();
         Task<Tag> AddTag(Tag tag);
         Task<Tag?> GetTagByName(string tagName);
+        Task<Tag?> GetTagById(int id);
     }
 }

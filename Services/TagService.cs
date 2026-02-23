@@ -34,5 +34,9 @@ namespace Services
         {
             return await _tagRepository.GetTagByName(tagName);
         }
+        public async Task<Tag?> GetTagById(int id)
+        {
+            return await _tagRepository.GetByIdAsync(id);
+        }
     }
 }

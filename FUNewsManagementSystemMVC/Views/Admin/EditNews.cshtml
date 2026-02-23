@@ -23,7 +23,7 @@
     <div class="flex items-center gap-2 text-sm">
         <span class="text-text-secondary">Admin</span>
         <span class="text-gray-300">/</span>
-        <span class="text-text-secondary">News Reports</span>
+        <span class="text-text-secondary">Manage News</span>
         <span class="text-gray-300">/</span>
         <span class="font-medium text-gray-900">Edit Article</span>
     </div>
@@ -40,9 +40,9 @@
                 <h1 class="text-3xl md:text-4xl font-bold text-text-main tracking-tight font-display">Edit News Article</h1>
                 <p class="text-text-secondary mt-1">Update article content as Administrator.</p>
             </div>
-            <a asp-action="Reports" class="flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-primary transition-colors">
+            <a asp-action="News" class="flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-primary transition-colors">
                 <span class="material-symbols-outlined text-[20px]">arrow_back</span>
-                Back to Reports
+                Back to News Management
             </a>
         </div>
 
@@ -249,6 +249,10 @@
                                     <span class="material-symbols-outlined text-[20px]">save</span>
                                     Update Article
                                 </button>
+                                <button type="button" onclick="openPreview()" class="w-full bg-white hover:bg-gray-50 text-text-secondary border border-gray-200 font-medium py-2.5 px-4 rounded-lg transition-all flex items-center justify-center gap-2">
+                                    <span class="material-symbols-outlined text-[20px]">visibility</span>
+                                    Preview Article
+                                </button>
                             </div>
                         </div>
 
@@ -266,6 +270,93 @@
             </div>
         </form>
     </main>
+</div>
+
+<!-- Preview Modal -->
+<div id="previewModal" class="hidden fixed inset-0 z-[110] overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen p-4 md:p-8">
+        <!-- Backdrop -->
+        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onclick="closePreview()"></div>
+        
+        <!-- Modal Content -->
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden transform transition-all flex flex-col">
+            <!-- Modal Header -->
+            <div class="bg-white px-6 py-4 border-b border-gray-100 flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">visibility</span>
+                    <h3 class="font-bold text-gray-900">Article Preview</h3>
+                </div>
+                <button type="button" onclick="closePreview()" class="h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-all">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <!-- Modal Body (Scrollable) -->
+            <div class="flex-1 overflow-y-auto bg-[#fcf9f8]/50">
+                <div class="max-w-4xl mx-auto p-6 md:p-12">
+                    <!-- Category Badge -->
+                    <div id="preview-category-container" class="mb-6 hidden">
+                        <span id="preview-category" class="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary border border-primary/20">
+                            Category
+                        </span>
+                    </div>
+                    
+                    <h1 id="preview-title" class="mb-8 text-3xl font-bold leading-tight text-gray-900 sm:text-4xl lg:text-5xl lg:leading-[1.15]">Article Title</h1>
+                    
+                    <!-- Author Info -->
+                    <div class="flex items-center gap-6 mb-10 pb-6 border-b border-gray-100">
+                        <div class="flex items-center gap-3">
+                            <div class="h-10 w-10 rounded-full overflow-hidden bg-gray-200">
+                                <img src="https://ui-avatars.com/api/?name=@(Context.Session.GetString("AccountName") ?? "Author")&background=random" alt="Author" class="h-full w-full object-cover">
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-sm font-bold text-gray-900">@(Context.Session.GetString("AccountName") ?? "FPT Author")</span>
+                                <span class="text-xs text-text-secondary">University Press</span>
+                            </div>
+                        </div>
+                        <div class="h-4 w-px bg-gray-300"></div>
+                        <div class="flex items-center gap-2 text-sm text-text-secondary">
+                            <span class="material-symbols-outlined text-sm">calendar_today</span>
+                            <span>@DateTime.Now.ToString("MMM dd, yyyy")</span>
+                        </div>
+                    </div>
+
+                    <!-- Featured Image -->
+                    <div id="preview-image-container" class="group relative mb-12 overflow-hidden rounded-2xl bg-gray-50 aspect-video flex items-center justify-center border border-gray-100 shadow-sm">
+                        <img id="preview-image" src="#" alt="Preview" class="w-full h-full object-cover hidden" />
+                        <div id="preview-image-placeholder" class="flex flex-col items-center text-gray-300">
+                            <span class="material-symbols-outlined text-6xl">image</span>
+                            <span class="text-sm mt-2">No Featured Image</span>
+                        </div>
+                        <div id="preview-headline-overlay" class="absolute bottom-6 left-6 right-6 bg-black/40 backdrop-blur-md px-6 py-3 rounded-xl text-white text-sm font-medium hidden">
+                            Headline Preview
+                        </div>
+                    </div>
+
+                    <!-- Content -->
+                    <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed">
+                        <p id="preview-headline" class="text-xl font-light text-gray-600 leading-relaxed border-l-4 border-primary pl-6 italic mb-10 hidden">
+                            Article summary goes here...
+                        </p>
+                        <div id="preview-content" class="prose-headings:text-gray-900 prose-p:mb-6 prose-a:text-primary prose-a:font-semibold">
+                            Article content goes here...
+                        </div>
+                        
+                        <div id="preview-tags" class="mt-16 pt-8 border-t border-gray-100 flex flex-wrap gap-2 hidden">
+                            <!-- Tags will be injected here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="bg-gray-50 px-6 py-4 border-t border-gray-100 flex justify-end">
+                <button type="button" onclick="closePreview()" class="px-6 py-2.5 rounded-xl bg-white border border-gray-200 text-text-secondary font-bold hover:bg-gray-100 transition-all shadow-sm">
+                    Close Preview
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Add Tag Modal -->
@@ -565,5 +656,70 @@
                 saveTagBtn.click();
             }
         });
+
+        // Preview Modal Functions
+        function openPreview() {
+            const title = document.querySelector('input[name="NewsTitle"]').value;
+            const headline = document.querySelector('input[name="Headline"]').value;
+            const content = editor.innerHTML;
+            const categorySelect = document.querySelector('select[name="CategoryId"]');
+            const categoryName = categorySelect.options[categorySelect.selectedIndex]?.text;
+            const categoryId = categorySelect.value;
+            
+            // Populate Modal
+            document.getElementById('preview-title').innerText = title || "Untitled Article";
+            document.getElementById('preview-headline').innerText = headline;
+            document.getElementById('preview-headline').classList.toggle('hidden', !headline);
+            document.getElementById('preview-headline-overlay').innerText = headline || "News Preview";
+            document.getElementById('preview-headline-overlay').classList.toggle('hidden', !headline);
+            document.getElementById('preview-content').innerHTML = content || "<p class='text-gray-400 italic'>No content yet...</p>";
+            
+            // Category
+            if (categoryId) {
+                document.getElementById('preview-category').innerText = categoryName;
+                document.getElementById('preview-category-container').classList.remove('hidden');
+            } else {
+                document.getElementById('preview-category-container').classList.add('hidden');
+            }
+
+            // Image
+            const previewImage = document.getElementById('preview-image');
+            const previewPlaceholder = document.getElementById('preview-image-placeholder');
+            const currentImgSrc = document.getElementById('imagePreview').src;
+            
+            if (currentImgSrc && currentImgSrc !== window.location.href + '#') {
+                previewImage.src = currentImgSrc;
+                previewImage.classList.remove('hidden');
+                previewPlaceholder.classList.add('hidden');
+            } else {
+                previewImage.classList.add('hidden');
+                previewPlaceholder.classList.remove('hidden');
+            }
+
+            // Tags
+            const tagsContainer = document.getElementById('preview-tags');
+            tagsContainer.innerHTML = '';
+            const selectedChips = selectedTagsContainer.querySelectorAll('span');
+            if (selectedChips.length > 0) {
+                selectedChips.forEach(chip => {
+                    const tagName = chip.innerText.replace('close', '').trim();
+                    const tagBadge = document.createElement('span');
+                    tagBadge.className = 'px-3 py-1.5 bg-gray-50 text-gray-600 text-sm font-medium rounded-lg border border-gray-100';
+                    tagBadge.innerText = '#' + tagName;
+                    tagsContainer.appendChild(tagBadge);
+                });
+                tagsContainer.classList.remove('hidden');
+            } else {
+                tagsContainer.classList.add('hidden');
+            }
+
+            document.getElementById('previewModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Prevent scroll
+        }
+
+        function closePreview() {
+            document.getElementById('previewModal').classList.add('hidden');
+            document.body.style.overflow = ''; // Restore scroll
+        }
     </script>
 }

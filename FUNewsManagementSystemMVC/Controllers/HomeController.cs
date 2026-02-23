@@ -2,6 +2,7 @@ using FUNewsManagementSystemMVC.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using Services.Abstractions;
+using BusinessObject.Entities;
 
 namespace FUNewsManagementSystemMVC.Controllers
 {
@@ -9,17 +10,46 @@ namespace FUNewsManagementSystemMVC.Controllers
     {
         private readonly INewsArticleService _newsArticleService;
         private readonly ICategoryService _categoryService;
+        private readonly ITagService _tagService;
 
-        public HomeController(INewsArticleService newsArticleService, ICategoryService categoryService)
+        public HomeController(INewsArticleService newsArticleService, ICategoryService categoryService, ITagService tagService)
         {
             _newsArticleService = newsArticleService;
             _categoryService = categoryService;
+            _tagService = tagService;
         }
 
-        public async Task<IActionResult> Index(string? search, short? categoryId, int page = 1)
+        public async Task<IActionResult> Index(string? search, short? categoryId, int? tagId, int page = 1)
         {
             int pageSize = 10;
-            var news = await _newsArticleService.GetAllNews(search: search, categoryId: categoryId, status: true, pageIndex: page, pageSize: pageSize);
+            
+            Tag? activeTag = null;
+            if (tagId.HasValue)
+            {
+                activeTag = await _tagService.GetTagById(tagId.Value);
+                if (activeTag != null)
+                {
+                    ViewBag.ActiveTag = activeTag;
+                    string tagStr = "#" + activeTag.TagName;
+                    if (string.IsNullOrEmpty(search))
+                    {
+                        search = tagStr;
+                    }
+                    else if (!search.Contains(tagStr))
+                    {
+                        search = tagStr + " " + search;
+                    }
+                }
+            }
+
+            // Clean search string for filtering (remove the hashtag if it matches the tagId filter)
+            string? cleanSearch = search;
+            if (activeTag != null)
+            {
+                cleanSearch = cleanSearch?.Replace("#" + activeTag.TagName, "").Trim();
+            }
+
+            var news = await _newsArticleService.GetAllNews(search: cleanSearch, categoryId: categoryId, status: true, tagId: tagId, pageIndex: page, pageSize: pageSize);
             
             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
             {
@@ -30,6 +60,7 @@ namespace FUNewsManagementSystemMVC.Controllers
             
             ViewBag.Search = search;
             ViewBag.CategoryId = categoryId;
+            ViewBag.TagId = tagId;
             ViewBag.Categories = categories;
             ViewBag.Page = page;
 
