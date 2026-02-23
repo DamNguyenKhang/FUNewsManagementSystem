@@ -47,7 +47,7 @@ namespace Services
         }
 
         public async Task UpdateAccount(SystemAccount account)
-        {   
+        {
             await _systemAccountRepository.UpdateAsync(account);
             await _unitOfWork.SaveChangesAsync();
         }
